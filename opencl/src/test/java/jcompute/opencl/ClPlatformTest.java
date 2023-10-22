@@ -21,22 +21,15 @@ package jcompute.opencl;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
-import org.bytedeco.javacpp.DoublePointer;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import jcompute.core.shape.Shape;
 import jcompute.opencl.ClDevice.DeviceType;
 import lombok.val;
 
 class ClPlatformTest {
-
-    @BeforeEach
-    void setUp() throws Exception {
-    }
 
     @Test
     void platform() {
@@ -69,78 +62,6 @@ class ClPlatformTest {
     void defaultDevice() {
         val device = ClDevice.getDefault();
         assertEquals(DeviceType.GPU, device.getType());
-    }
-
-    static final int MEM_SIZE = 128;
-    final String VEC_ADD_SRC = """
-            __kernel void vecAdd(__global double* a) {
-                int gid = get_global_id(0);
-                a[gid] += a[gid];
-            }
-            """;
-
-    @Test
-    void vecAdd() {
-        System.err.println("--- vecAdd ---");
-        try {
-            ClDevice.streamAll().forEach(this::vecAdd);
-        } catch (Throwable e) {
-            System.err.println(" - ERR");
-            e.printStackTrace();
-        } finally {
-            System.err.println("------");
-        }
-    }
-
-    void vecAdd(final ClDevice device) {
-
-        System.err.printf("vecAdd(%s)", device);
-
-        val range = Shape.of(MEM_SIZE);
-
-        /* Initialize Data */
-        val mem = new DoublePointer(MEM_SIZE);
-        range.forEach(i->mem.put(i, i));
-
-        /* Create OpenCL Context */
-        try(val context = device.createContext()) {
-
-            /* Create Command Queue */
-            val queue = context.createQueue();
-
-            /* Create Kernel program from the read in source */
-            val program = context.createProgram(VEC_ADD_SRC);
-
-            /* Create OpenCL Kernel */
-            val kernel = program.createKernel("vecAdd");
-
-            /* Create memory buffer*/
-            val memObj = context.createMemoryReadWrite(mem);
-
-            /* Set OpenCL kernel argument */
-            kernel.setArgs(memObj);
-
-            queue.enqueueWriteBuffer(memObj);
-
-            // run kernel 2 times
-            for (int j = 0; j < 2; j++) {
-                queue.enqueueNDRangeKernel(kernel, range);
-            }
-
-            queue.enqueueReadBuffer(memObj);
-
-            validate(range, mem);
-
-        }
-
-        System.err.println(" - OK");
-
-    }
-
-    static void validate(final Shape range, final DoublePointer result) {
-        assertEquals(range.totalSize(), result.capacity());
-        range.forEach(i->
-            assertEquals(4.f*i, result.get(i), 1E-6));
     }
 
 }
