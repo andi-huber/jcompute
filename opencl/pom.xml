@@ -38,6 +38,11 @@
 			<artifactId>jcompute-core</artifactId>
 		</dependency>
 		
+		<dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>opencl-platform</artifactId>
+        </dependency>
+		
 	</dependencies>
     
 </project>
