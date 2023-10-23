@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
-	license agreements. See the NOTICE file distributed with this work for additional
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more
+contributor
+	license agreements. See the NOTICE file distributed with this work for
+additional
 	information regarding copyright ownership. The ASF licenses this file to
 	you under the Apache License, Version 2.0 (the "License"); you may not use
 	this file except in compliance with the License. You may obtain a copy of
@@ -10,53 +12,53 @@
 	OF ANY KIND, either express or implied. See the License for the specific
 	language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<groupId>jcompute</groupId>
-	<artifactId>jcompute-bom</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
-	
-	<name>JCompute</name>
-	<description>JCompute (Umbrella)</description>
-	<url>https://github.com/andi-huber/jcompute</url>
+    <groupId>jcompute</groupId>
+    <artifactId>jcompute-bom</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
 
-	<packaging>pom</packaging>
+    <name>JCompute</name>
+    <description>JCompute (Umbrella)</description>
+    <url>https://github.com/andi-huber/jcompute</url>
 
-	<properties>
-		<maven.compiler.release>17</maven.compiler.release>
-		<maven.compiler.arg>-parameters</maven.compiler.arg>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		
-		<bytedeco.version>3.0-1.5.9</bytedeco.version>
-		<commons-compress.version>1.24.0</commons-compress.version>
-		<log4j.version>2.21.0</log4j.version>
+    <packaging>pom</packaging>
 
-		<lombok-version>1.18.30</lombok-version>
-		<!-- testing -->
-		<junit-version>[5,)</junit-version>
-		<surefire-plugin.argLine>-Xmx384m</surefire-plugin.argLine>
-	</properties>
+    <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.arg>-parameters</maven.compiler.arg>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-	<build>
-		<resources>
-			<resource>
-				<filtering>false</filtering>
-				<directory>src/main/resources</directory>
-			</resource>
-			<resource>
-				<filtering>false</filtering>
-				<directory>src/main/java</directory>
-				<includes>
-					<include>**</include>
-				</includes>
-				<excludes>
-					<exclude>**/*.java</exclude>
-				</excludes>
-			</resource>
-		</resources>
-		<testResources>
+        <bytedeco.version>1.5.9</bytedeco.version>
+        <commons-compress.version>1.24.0</commons-compress.version>
+        <log4j.version>2.21.0</log4j.version>
+
+        <lombok-version>1.18.30</lombok-version>
+        <!-- testing -->
+        <junit-version>[5,)</junit-version>
+        <surefire-plugin.argLine>-Xmx384m</surefire-plugin.argLine>
+    </properties>
+
+    <build>
+        <resources>
+            <resource>
+                <filtering>false</filtering>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <filtering>false</filtering>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**</include>
+                </includes>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <testResources>
             <testResource>
                 <filtering>false</filtering>
                 <directory>src/test/java</directory>
@@ -65,164 +67,171 @@
                 </excludes>
             </testResource>
         </testResources>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.11.0</version>
-				<configuration>
-					<release>${maven.compiler.release}</release>
-					<compilerArgs>
-						<arg>${maven.compiler.arg}</arg>
-					</compilerArgs>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-							<version>${lombok-version}</version>
-						</path>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-                        <printSummary>false</printSummary>
-                        <argLine>${surefire-plugin.argLine}</argLine>
-                        <forkCount>1C</forkCount>
-                        <reuseForks>true</reuseForks>
-                        <systemPropertyVariables>
-                            <!-- allows tests to reduce verbosity, or conditionally disable
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                    <compilerArgs>
+                        <arg>${maven.compiler.arg}</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok-version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <printSummary>false</printSummary>
+                    <argLine>${surefire-plugin.argLine}</argLine>
+                    <forkCount>1C</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <systemPropertyVariables>
+                        <!-- allows tests to reduce verbosity, or conditionally
+                        disable
                                  when run with surefire; e.g.:
                                  @DisabledIfSystemProperty(named = "isRunningWithSurefire", matches = "true")
                                  -->
-                            <isRunningWithSurefire>true</isRunningWithSurefire>
-                        </systemPropertyVariables>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+                        <isRunningWithSurefire>true</isRunningWithSurefire>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-	<dependencyManagement>
-		<dependencies>
+    <dependencyManagement>
+        <dependencies>
 
-			<!-- SUB MODULES -->
+            <!-- SUB MODULES -->
 
-			<dependency>
-				<groupId>jcompute</groupId>
-				<artifactId>jcompute-core</artifactId>
-				<version>1.0.0-SNAPSHOT</version>
-			</dependency>
+            <dependency>
+                <groupId>jcompute</groupId>
+                <artifactId>jcompute-core</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
 
-			<dependency>
-				<groupId>jcompute</groupId>
-				<artifactId>jcompute-opencl</artifactId>
-				<version>1.0.0-SNAPSHOT</version>
-			</dependency>
-			
-			<dependency>
+            <dependency>
+                <groupId>jcompute</groupId>
+                <artifactId>jcompute-opencl</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
                 <groupId>jcompute</groupId>
                 <artifactId>jcompute-combinatorics</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>jcompute</groupId>
                 <artifactId>jcompute-tukaani</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
             </dependency>
-			
-			<!-- BYTEDECO-->
-			
-			<dependency>
-	            <groupId>org.bytedeco</groupId>
-	            <artifactId>opencl-platform</artifactId>
-	            <version>${bytedeco.version}</version>
-	        </dependency>
-	        
-	        <!-- APACHE -->
-	        
-	        <dependency>
+
+            <!-- BYTEDECO-->
+
+            <dependency>
+                <groupId>org.bytedeco</groupId>
+                <artifactId>javacpp</artifactId>
+                <version>${bytedeco.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.bytedeco</groupId>
+                <artifactId>opencl-platform</artifactId>
+                <version>3.0-${bytedeco.version}</version>
+            </dependency>
+
+            <!-- APACHE -->
+
+            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
                 <version>${commons-compress.version}</version>
             </dependency>
-			
-			<dependency>
+
+            <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-core</artifactId>
                 <version>${log4j.version}</version>
             </dependency>
-			
-			<!-- OTHER -->
 
-			<dependency>
-				<groupId>org.projectlombok</groupId>
-				<artifactId>lombok</artifactId>
-				<version>${lombok-version}</version>
-			</dependency>
-		
-			<!-- TESTING -->
-			
-			<dependency>
-				<groupId>org.junit.jupiter</groupId>
-				<artifactId>junit-jupiter-api</artifactId>
-				<version>${junit-version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.junit.jupiter</groupId>
-				<artifactId>junit-jupiter-engine</artifactId>
-				<version>${junit-version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-	    		<groupId>org.junit.jupiter</groupId>
-	    		<artifactId>junit-jupiter-params</artifactId>
-	    		<version>${junit-version}</version>
-				<scope>test</scope>
-			</dependency>
+            <!-- OTHER -->
 
-		</dependencies>
-	</dependencyManagement>
-	
-	<dependencies>
-		
-		<!-- TESTING -->
-		
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-    		<groupId>org.junit.jupiter</groupId>
-    		<artifactId>junit-jupiter-params</artifactId>
-			<scope>test</scope>
-		</dependency>
-		
-	</dependencies>
-	
-	<modules>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok-version}</version>
+            </dependency>
+
+            <!-- TESTING -->
+
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit-version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>${junit-version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-params</artifactId>
+                <version>${junit-version}</version>
+                <scope>test</scope>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+
+        <!-- TESTING -->
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <modules>
         <module>tukaani</module>
-		<module>core</module>
-		<module>opencl</module>
-		<module>combinatorics</module>
-	</modules>
-	
-	<!-- META DATA -->
-	
-	<inceptionYear>Oct 2023</inceptionYear>
+        <module>core</module>
+        <module>opencl</module>
+        <module>combinatorics</module>
+    </modules>
+
+    <!-- META DATA -->
+
+    <inceptionYear>Oct 2023</inceptionYear>
     <scm>
         <url>https://github.com/andi-huber/jcompute</url>
         <tag>HEAD</tag>
     </scm>
-	<issueManagement>
+    <issueManagement>
         <system>Github</system>
         <url>https://github.com/andi-huber/jcompute</url>
     </issueManagement>
@@ -241,5 +250,5 @@
             <timezone>+1</timezone>
         </developer>
     </developers>
-    
+
 </project>
