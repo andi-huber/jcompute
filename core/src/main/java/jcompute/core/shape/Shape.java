@@ -18,13 +18,18 @@
  */
 package jcompute.core.shape;
 
+import java.io.Serializable;
 import java.util.function.LongConsumer;
 import java.util.stream.LongStream;
+
+import jcompute.core.util.function.BiLongConsumer;
+import jcompute.core.util.function.TriLongConsumer;
 
 /**
  * Tuple of long, where the elements give the lengths of the corresponding array dimensions.
  */
-public record Shape(int dimensionCount, long totalSize, long sizeX, long sizeY, long sizeZ) {
+public record Shape(int dimensionCount, long totalSize, long sizeX, long sizeY, long sizeZ)
+implements Serializable {
 
     public static Shape of(final long size) {
         return new Shape(1, size, size, 0, 0);
@@ -40,7 +45,7 @@ public record Shape(int dimensionCount, long totalSize, long sizeX, long sizeY, 
     }
 
     /**
-     * Returns the global ids as {@link LongStream} ranging from zero up to {@link #totalSize} - 1.
+     * Returns the global indices as {@link LongStream} ranging from zero up to ({@link #totalSize} - 1).
      * @return 0..(totalSize-1)
      */
     public LongStream stream() {
@@ -48,7 +53,7 @@ public record Shape(int dimensionCount, long totalSize, long sizeX, long sizeY, 
     }
 
     /**
-     * Visits the global ids from zero up to {@link #totalSize} - 1.
+     * Visits the global indices from zero up to ({@link #totalSize} - 1).
      * @return this
      */
     public Shape forEach(final LongConsumer onIndex) {
@@ -59,89 +64,79 @@ public record Shape(int dimensionCount, long totalSize, long sizeX, long sizeY, 
         return this;
     }
 
+    /**
+     * Visits the global indices from offset up to (offset + size - 1).
+     * @return this
+     */
+    public Shape forEach(final long offset, final long size, final LongConsumer onIndex) {
+        long end = offset + size;
+        for(long i = offset; i<end; ++i) {
+            onIndex.accept(i);
+        }
+        return this;
+    }
 
-
-//    /** In case of {@code dimensionCount>1} flattens the finite space. */
-//    public void visit1d(final LongConsumer onIndex) {
-//        long end = totalSize();
-//        for(long i = 0L; i<end; ++i) {
-//            onIndex.accept(i);
-//        }
-//    }
-
-//    public void visit1d(final long offset, final long size, final LongConsumer onIndex) {
-//        long end = offset + size;
-//        for(long i = offset; i<end; ++i) {
-//            onIndex.accept(i);
-//        }
-//    }
-
-//    /**
-//     * In case of {@code dimensionCount<2} extends the finite space.<br>
-//     * In case of {@code dimensionCount>2} throws {@link IllegalArgumentException}.
-//     */
-//    public void visit2d(final BiLongConsumer onIndex) {
-//        switch (dimensionCount) {
-//        case 1: {
-//            for(long i = 0L; i<sizeX; ++i) {
-//                onIndex.accept(i, 0L);
-//            }
-//            return;
-//        }
-//        case 2: {
-//            for(long i = 0L; i<sizeX; ++i) {
-//                for(long j = 0L; j<sizeY; ++j) {
-//                    onIndex.accept(i, j);
-//                }
-//            }
-//            return;
-//        }
-//        default:
-//            throw new IllegalArgumentException("Unexpected value: " + dimensionCount);
-//        }
-//    }
+    public void forEach(final BiLongConsumer onIndex) {
+        switch (dimensionCount) {
+        case 1: {
+            for(long i = 0L; i<sizeX; ++i) {
+                onIndex.accept(i, 0L);
+            }
+            return;
+        }
+        case 2: {
+            for(long i = 0L; i<sizeX; ++i) {
+                for(long j = 0L; j<sizeY; ++j) {
+                    onIndex.accept(i, j);
+                }
+            }
+            return;
+        }
+        default:
+            throw new IllegalArgumentException("Unexpected value: " + dimensionCount);
+        }
+    }
 
     /**
-     * Return the global id for given 2d index (i,j).
+     * Return the global index for given 2d index (i,j).
      */
     public long gid2d(final long i, final long j) {
         return i * sizeY() + j;
     }
 
-//    /** In case of {@code dimensionCount<3} extends the finite space. */
-//    public void visit3d(final TriLongConsumer onIndex) {
-//        switch (dimensionCount) {
-//        case 1: {
-//            for(long i = 0L; i<sizeX; ++i) {
-//                onIndex.accept(i, 0L, 0L);
-//            }
-//            return;
-//        }
-//        case 2: {
-//            for(long i = 0L; i<sizeX; ++i) {
-//                for(long j = 0L; j<sizeY; ++j) {
-//                    onIndex.accept(i, j, 0L);
-//                }
-//            }
-//            return;
-//        }
-//        case 3: {
-//            for(long i = 0L; i<sizeX; ++i) {
-//                for(long j = 0L; j<sizeY; ++j) {
-//                    for(long k = 0L; k<sizeZ; ++k) {
-//                        onIndex.accept(i, j, k);
-//                    }
-//                }
-//            }
-//            return;
-//        }
-//        default:
-//            throw new IllegalArgumentException("Unexpected value: " + dimensionCount);
-//        }
-//    }
+    public void forEach(final TriLongConsumer onIndex) {
+        switch (dimensionCount) {
+        case 1: {
+            for(long i = 0L; i<sizeX; ++i) {
+                onIndex.accept(i, 0L, 0L);
+            }
+            return;
+        }
+        case 2: {
+            for(long i = 0L; i<sizeX; ++i) {
+                for(long j = 0L; j<sizeY; ++j) {
+                    onIndex.accept(i, j, 0L);
+                }
+            }
+            return;
+        }
+        case 3: {
+            for(long i = 0L; i<sizeX; ++i) {
+                for(long j = 0L; j<sizeY; ++j) {
+                    for(long k = 0L; k<sizeZ; ++k) {
+                        onIndex.accept(i, j, k);
+                    }
+                }
+            }
+            return;
+        }
+        default:
+            throw new IllegalArgumentException("Unexpected value: " + dimensionCount);
+        }
+    }
 
     /**
-     * Return the global id for given 3d index (i,j,k).
+     * Return the global index for given 3d index (i,j,k).
      */
     public long gid3d(final long i, final long j, final long k) {
         return ( i * sizeY() + j ) * sizeZ() + k;
