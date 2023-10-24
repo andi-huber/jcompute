@@ -31,31 +31,49 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import jcompute.core.io.Compressor;
 import jcompute.core.mem.LongMemory;
 import jcompute.core.mem.buffered.LongMemoryBuffered;
+import jcompute.opencl.ClDevice;
 import lombok.val;
 
 class SetCoverTest {
 
     private LongMemory<?> inputMem;
+    private BytePointer outputMem;
 
     @BeforeEach
     void setup() throws FileNotFoundException, IOException {
         try(var fis = this.getClass().getResourceAsStream("wheel-35-7-6.lzma")) {
             this.inputMem = LongMemoryBuffered.read(Compressor.lzma().in(fis));
         }
+        this.outputMem = new BytePointer(inputMem.shape().totalSize());
     }
 
-    @Test
-    void test() {
+    @Test// @Disabled("not yet running parallel, takes ~40s")
+    void cpu() {
         assertNotNull(inputMem);
 
         val range = inputMem.shape();
-        val covered = new BytePointer(range.totalSize());
-        var setCover = new SetCoverFactory.LongJava(7, 6, inputMem, covered);
+
+        var setCover = new SetCoverFactory.LongJava(7, 6, inputMem, outputMem);
         setCover.run(range);
 
         //assert all ones
         range.forEach(gid->{
-            assertEquals((byte)1, covered.get(gid));
+            assertEquals((byte)1, outputMem.get(gid));
+        });
+    }
+
+    @Test
+    void gpu() {
+        assertNotNull(inputMem);
+
+        val range = inputMem.shape();
+
+        var setCover = new SetCoverFactory.LongCl(ClDevice.getDefault(), 7, 6, inputMem, outputMem);
+        setCover.run(range);
+
+        //assert all ones
+        range.forEach(gid->{
+            assertEquals((byte)1, outputMem.get(gid));
         });
 
     }

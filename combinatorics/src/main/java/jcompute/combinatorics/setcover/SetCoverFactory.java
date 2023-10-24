@@ -26,7 +26,6 @@ import org.bytedeco.javacpp.LongPointer;
 import jcompute.combinatorics.base.Combinations;
 import jcompute.core.mem.LongMemory;
 import jcompute.core.shape.Shape;
-import jcompute.core.timing.Timing;
 import jcompute.opencl.ClDevice;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -35,14 +34,6 @@ import lombok.extern.log4j.Log4j2;
 
 @UtilityClass
 public class SetCoverFactory {
-
-//    public SetCover create(final Optional<ClDevice> clDevice) {
-//        return new LongJava(0, 0, null, null);
-//    }
-//
-//    public static BytePointer coverage(final int m, final int t, final LongPointer kSets) {
-//        return new LongJava(m, t, null, null);
-//    }
 
     @RequiredArgsConstructor
     public static class LongJava /*implements ComputeKernel*/ {
@@ -59,12 +50,14 @@ public class SetCoverFactory {
 
             val pSets = pSets(range, m);
 
-            range.forEach(gid->{
+            System.err.printf("SetCover.LongJava kSet size: %d%n", range.totalSize());
 
+            range.stream()
+            .parallel()
+            .forEach(gid->{
                 covered.put(gid, covers(pSets.get(gid), t, kSets)
                         ? (byte)1
                         : 0);
-
             });
         }
 
@@ -85,7 +78,7 @@ public class SetCoverFactory {
         //in
         final int m;
         final int t;
-        final long[] kSets;
+        final LongMemory<?> kSets;
         //out
         final BytePointer covered;
 
@@ -132,8 +125,6 @@ public class SetCoverFactory {
 
                 val kernel = program.createKernel("cover64");
 
-                val stopWatch = Timing.now();
-
                 val memA = context.createMemoryReadOnly(pSets(range, m));
                 val memB = context.createMemoryReadOnly(kSets(kSets));
                 val memC = context.createMemoryReadWrite(covered);
@@ -150,7 +141,6 @@ public class SetCoverFactory {
 
                 queue.enqueueReadBuffer(memC);
 
-                stopWatch.log(log, "cover64");
             }
 
         }
@@ -169,11 +159,11 @@ public class SetCoverFactory {
         return pSets;
     }
 
-    private LongPointer kSets(final long[] array) {
-        val kSets = new LongPointer(array.length);
-        IntStream.range(0, array.length)
+    private LongPointer kSets(final LongMemory<?> mem) {
+        val kSets = new LongPointer(mem.shape().totalSize());
+        IntStream.range(0, (int)mem.shape().totalSize())
         .forEach(k->{
-            kSets.put(k, array[k]);
+            kSets.put(k, mem.get(k));
         });
         return kSets;
     }
