@@ -38,4 +38,8 @@ public interface DoubleMemory {
      */
     public double get(final long gid);
 
+    // -- FACTORIES
+
+
+
 }
