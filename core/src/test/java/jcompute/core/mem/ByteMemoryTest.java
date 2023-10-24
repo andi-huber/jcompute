@@ -63,7 +63,7 @@ class ByteMemoryTest {
             System.err.printf("file size: %dk%n", tempFile.get().length()/1024);
 
             mem2 = tempFile.read(is->
-                ByteMemoryBuffered.read(mem.shape(), compressor.in(is)));
+                ByteMemoryBuffered.read(compressor.in(is)));
         }
 
         assertEquals(mem, mem2);

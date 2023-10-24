@@ -54,6 +54,7 @@ implements LongMemory<LongMemoryBuffered> {
 
     @SneakyThrows
     public void write(final OutputStream out) {
+        shape.write(out);
         ChannelUtils.write(buffer, out);
     }
 
@@ -65,9 +66,14 @@ implements LongMemory<LongMemoryBuffered> {
     // -- FACTORIES
 
     @SneakyThrows
-    public static LongMemoryBuffered read(final Shape shape, final InputStream in) {
+    public static LongMemoryBuffered read(final InputStream in) {
+        var shape = Shape.read(in);
         final int size = Math.toIntExact(shape.totalSize());
         return new LongMemoryBuffered(shape, ChannelUtils.readLongs(size, in));
+    }
+
+    public static LongMemoryBuffered of(final long[] array) {
+        return new LongMemoryBuffered(Shape.of(array.length), LongBuffer.wrap(array));
     }
 
 }

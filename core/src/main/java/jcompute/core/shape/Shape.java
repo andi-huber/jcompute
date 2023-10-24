@@ -18,18 +18,26 @@
  */
 package jcompute.core.shape;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.function.LongConsumer;
 import java.util.stream.LongStream;
 
 import jcompute.core.util.function.BiLongConsumer;
 import jcompute.core.util.function.TriLongConsumer;
+import jcompute.core.util.primitive.LongUtils.LongHelper;
+import lombok.SneakyThrows;
 
 /**
  * Tuple of long, where the elements give the lengths of the corresponding array dimensions.
  */
 public record Shape(int dimensionCount, long totalSize, long sizeX, long sizeY, long sizeZ)
 implements Serializable {
+
+    public static Shape empty() {
+        return new Shape(0, 0, 0, 0, 0);
+    }
 
     public static Shape of(final long size) {
         return new Shape(1, size, size, 0, 0);
@@ -141,5 +149,45 @@ implements Serializable {
     public long gid3d(final long i, final long j, final long k) {
         return ( i * sizeY() + j ) * sizeZ() + k;
     }
+
+    // -- IO
+
+    @SneakyThrows
+    public void write(final OutputStream out) {
+        out.write(dimensionCount);
+        if(dimensionCount==0) return;
+        var longHelper = new LongHelper();
+        longHelper.write(sizeX, out);
+        if(dimensionCount>1) {
+            longHelper.write(sizeY, out);
+        }
+        if(dimensionCount>2) {
+            longHelper.write(sizeZ, out);
+        }
+    }
+
+    @SneakyThrows
+    public static Shape read(final InputStream in) {
+        final int dimensionCount = in.read();
+        if(dimensionCount==0) return empty();
+        var longHelper = new LongHelper();
+        if(dimensionCount==1) {
+            return Shape.of(
+                    longHelper.read(in));
+        }
+        if(dimensionCount==2) {
+            return Shape.of(
+                    longHelper.read(in),
+                    longHelper.read(in));
+        }
+        if(dimensionCount==3) {
+            return Shape.of(
+                    longHelper.read(in),
+                    longHelper.read(in),
+                    longHelper.read(in));
+        }
+        throw new IllegalArgumentException("Unexpected value: " + dimensionCount);
+    }
+
 }
 

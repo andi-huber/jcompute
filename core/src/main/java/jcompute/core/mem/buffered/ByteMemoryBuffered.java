@@ -54,6 +54,7 @@ implements ByteMemory<ByteMemoryBuffered> {
 
     @SneakyThrows
     public void write(final OutputStream out) {
+        shape.write(out);
         ChannelUtils.write(buffer, out);
     }
 
@@ -65,7 +66,8 @@ implements ByteMemory<ByteMemoryBuffered> {
     // -- FACTORIES
 
     @SneakyThrows
-    public static ByteMemoryBuffered read(final Shape shape, final InputStream in) {
+    public static ByteMemoryBuffered read(final InputStream in) {
+        var shape = Shape.read(in);
         final int size = Math.toIntExact(shape.totalSize());
         return new ByteMemoryBuffered(shape, ChannelUtils.readBytes(size, in));
     }

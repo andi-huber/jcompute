@@ -63,7 +63,7 @@ class LongMemoryTest {
             System.err.printf("file size: %dk%n", tempFile.get().length()/1024);
 
             mem2 = tempFile.read(is->
-                LongMemoryBuffered.read(mem.shape(), compressor.in(is)));
+                LongMemoryBuffered.read(compressor.in(is)));
         }
 
         assertEquals(mem, mem2);

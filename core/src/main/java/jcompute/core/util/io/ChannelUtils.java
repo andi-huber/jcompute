@@ -27,6 +27,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
+import jcompute.core.util.primitive.LongUtils.LongHelper;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 
@@ -65,35 +66,29 @@ public class ChannelUtils {
 
     @SneakyThrows
     public void write(final LongBuffer buffer, final OutputStream out) {
-        var byteBuffer = ByteBuffer.allocate(8);
+        var longHelper = new LongHelper();
         final int size = buffer.capacity();
         try(WritableByteChannel channel = Channels.newChannel(out)){
             buffer.rewind();
             for (int i = 0; i < size; i++) {
-                byteBuffer.rewind();
-                byteBuffer.putLong(buffer.get());
-                byteBuffer.rewind();
-                int count = channel.write(byteBuffer);
+                int count = longHelper.write(buffer.get(), channel);
                 if(count!=8) {
                     throw new IOException(String.format("Could only write %d of %d longs.", i, size));
                 }
+
             }
         }
     }
 
     @SneakyThrows
     public static LongBuffer readLongs(final int size, final InputStream in) {
-        var byteBuffer = ByteBuffer.allocate(8);
+        var longHelper = new LongHelper();
         var buffer = LongBuffer.allocate(size);
         buffer.rewind();
         try(ReadableByteChannel channel = Channels.newChannel(in)) {
             int count = 0;
             while(count<size) {
-                byteBuffer.rewind();
-                int read = channel.read(byteBuffer);
-                if(read!=8) break;
-                byteBuffer.rewind();
-                buffer.put(byteBuffer.getLong());
+                buffer.put(longHelper.read(channel));
                 count++;
             }
             if(count!=size) {
