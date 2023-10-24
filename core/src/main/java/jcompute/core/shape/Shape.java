@@ -26,6 +26,7 @@ import java.util.stream.LongStream;
 
 import jcompute.core.util.function.BiLongConsumer;
 import jcompute.core.util.function.TriLongConsumer;
+import jcompute.core.util.primitive.LongUtils;
 import jcompute.core.util.primitive.LongUtils.LongHelper;
 import lombok.SneakyThrows;
 
@@ -156,13 +157,12 @@ implements Serializable {
     public void write(final OutputStream out) {
         out.write(dimensionCount);
         if(dimensionCount==0) return;
-        var longHelper = new LongHelper();
-        longHelper.write(sizeX, out);
+        LongUtils.write(sizeX, out);
         if(dimensionCount>1) {
-            longHelper.write(sizeY, out);
+            LongUtils.write(sizeY, out);
         }
         if(dimensionCount>2) {
-            longHelper.write(sizeZ, out);
+            LongUtils.write(sizeZ, out);
         }
     }
 

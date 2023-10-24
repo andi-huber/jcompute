@@ -25,7 +25,7 @@ import java.util.function.LongUnaryOperator;
 
 import jcompute.core.mem.LongMemory;
 import jcompute.core.shape.Shape;
-import jcompute.core.util.io.ChannelUtils;
+import jcompute.core.util.primitive.LongUtils;
 import lombok.SneakyThrows;
 
 public record LongMemoryBuffered(Shape shape, LongBuffer buffer)
@@ -55,7 +55,7 @@ implements LongMemory<LongMemoryBuffered> {
     @SneakyThrows
     public void write(final OutputStream out) {
         shape.write(out);
-        ChannelUtils.write(buffer, out);
+        LongUtils.writeBuffer(buffer, out);
     }
 
     @Override
@@ -69,7 +69,7 @@ implements LongMemory<LongMemoryBuffered> {
     public static LongMemoryBuffered read(final InputStream in) {
         var shape = Shape.read(in);
         final int size = Math.toIntExact(shape.totalSize());
-        return new LongMemoryBuffered(shape, ChannelUtils.readLongs(size, in));
+        return new LongMemoryBuffered(shape, LongUtils.readBuffer(size, in));
     }
 
     public static LongMemoryBuffered of(final long[] array) {
