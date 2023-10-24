@@ -26,8 +26,7 @@ import java.util.stream.LongStream;
 
 import jcompute.core.util.function.BiLongConsumer;
 import jcompute.core.util.function.TriLongConsumer;
-import jcompute.core.util.primitive.LongUtils;
-import jcompute.core.util.primitive.LongUtils.LongHelper;
+import jcompute.core.util.primitive.LongUtils.LongExternalizer;
 import lombok.SneakyThrows;
 
 /**
@@ -157,12 +156,13 @@ implements Serializable {
     public void write(final OutputStream out) {
         out.write(dimensionCount);
         if(dimensionCount==0) return;
-        LongUtils.write(sizeX, out);
+        var externalizer = new LongExternalizer(1);
+        externalizer.write(sizeX, out);
         if(dimensionCount>1) {
-            LongUtils.write(sizeY, out);
+            externalizer.write(sizeY, out);
         }
         if(dimensionCount>2) {
-            LongUtils.write(sizeZ, out);
+            externalizer.write(sizeZ, out);
         }
     }
 
@@ -170,21 +170,21 @@ implements Serializable {
     public static Shape read(final InputStream in) {
         final int dimensionCount = in.read();
         if(dimensionCount==0) return empty();
-        var longHelper = new LongHelper();
+        var externalizer = new LongExternalizer(1);
         if(dimensionCount==1) {
             return Shape.of(
-                    longHelper.read(in));
+                    externalizer.read(in));
         }
         if(dimensionCount==2) {
             return Shape.of(
-                    longHelper.read(in),
-                    longHelper.read(in));
+                    externalizer.read(in),
+                    externalizer.read(in));
         }
         if(dimensionCount==3) {
             return Shape.of(
-                    longHelper.read(in),
-                    longHelper.read(in),
-                    longHelper.read(in));
+                    externalizer.read(in),
+                    externalizer.read(in),
+                    externalizer.read(in));
         }
         throw new IllegalArgumentException("Unexpected value: " + dimensionCount);
     }

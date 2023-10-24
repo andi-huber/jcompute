@@ -18,9 +18,9 @@
  */
 package jcompute.core.util.primitive;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 
 import lombok.SneakyThrows;
@@ -29,55 +29,74 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class LongUtils {
 
-    @Deprecated
-    public static record LongHelper(ByteBuffer byteBuffer) {
-        public LongHelper() {
-            this(ByteBuffer.allocate(Long.BYTES));
+    public static record LongExternalizer(int bufferSize, long[] longArray, byte[] byteArray) {
+        public LongExternalizer() {
+            this(64);
         }
-        public long fromBytes(final byte[] bytes) {
-            byteBuffer.put(0, bytes);
-            byteBuffer.rewind();
-            long ref = byteBuffer.getLong();
-            long x = LongUtils.fromBytes(bytes);
+        public LongExternalizer(final int bufferSize) {
+            this(validateBufferSize(bufferSize), new long[bufferSize], new byte[Long.BYTES * bufferSize]);
+        }
 
-            if(ref!=x) {
-                System.err.printf("ref %s%n", Long.toBinaryString(ref));
-                System.err.printf("x   %s%n", Long.toBinaryString(x));
-                System.exit(1);
+        static int validateBufferSize(final int bufferSize) {
+            if(bufferSize<1) {
+                throw new IllegalArgumentException(String.format("invalid buffer size %d", bufferSize));
             }
-
-            return ref;
+            return bufferSize;
         }
-//        @SneakyThrows
-//        public int write(final long value, final WritableByteChannel channel) {
-//            byteBuffer.putLong(0, value);
-//            byteBuffer.rewind();
-//            return channel.write(byteBuffer);
-//        }
-//        @SneakyThrows
-//        public long read(final ReadableByteChannel channel) {
-//            byteBuffer.rewind();
-//            if(channel.read(byteBuffer)!=Long.BYTES) {
-//                throw new IOException(String.format("Could not read 8 bytes to assemble a long."));
-//            }
-//            byteBuffer.rewind();
-//            return byteBuffer.getLong();
-//        }
+
+        @SneakyThrows
+        public void write(final long value, final OutputStream out) {
+            toBytes(value, byteArray);
+            out.write(byteArray, 0, Long.BYTES);
+        }
         @SneakyThrows
         public long read(final InputStream in) {
-            return fromBytes(in.readNBytes(Long.BYTES));
+            in.read(byteArray, 0, Long.BYTES);
+            return fromBytes(byteArray);
         }
+
+        @SneakyThrows
+        public void writeBuffer(final LongBuffer buffer, final OutputStream out) {
+            buffer.rewind();
+            int remainingLongs = buffer.capacity();
+            while(remainingLongs>0) {
+                int blockSize = Math.min(remainingLongs, bufferSize);
+                buffer.get(longArray, 0, blockSize);
+                toBytes(blockSize, longArray, byteArray);
+                out.write(byteArray, 0, blockSize * Long.BYTES);
+                remainingLongs-=blockSize;
+            }
+            out.close();
+        }
+        @SneakyThrows
+        public LongBuffer readBuffer(final int size, final InputStream in) {
+            var buffer = LongBuffer.allocate(size);
+            int remainingLongs = size;
+            while(remainingLongs>0) {
+                int blockSize = Math.min(remainingLongs, bufferSize);
+                int bytesToRead = blockSize * Long.BYTES;
+                int bytesRead = in.read(byteArray, 0, bytesToRead);
+                if(bytesRead<bytesToRead) {
+                    throw new IOException("could not read all bytes of a single block");
+                }
+                fromBytes(blockSize, byteArray, longArray);
+                buffer.put(longArray, 0, blockSize);
+                remainingLongs-=blockSize;
+            }
+            return buffer;
+        }
+
     }
 
-    public void toBytes(final long data, final byte[] bytes) {
-        bytes[0] = (byte)(data >> 56);
-        bytes[1] = (byte)(data >> 48);
-        bytes[2] = (byte)(data >> 40);
-        bytes[3] = (byte)(data >> 32);
-        bytes[4] = (byte)(data >> 24);
-        bytes[5] = (byte)(data >> 16);
-        bytes[6] = (byte)(data >> 8);
-        bytes[7] = (byte)(data);
+    public void toBytes(final long v, final byte[] bytes) {
+        bytes[0] = (byte)(v >> 56);
+        bytes[1] = (byte)(v >> 48);
+        bytes[2] = (byte)(v >> 40);
+        bytes[3] = (byte)(v >> 32);
+        bytes[4] = (byte)(v >> 24);
+        bytes[5] = (byte)(v >> 16);
+        bytes[6] = (byte)(v >> 8);
+        bytes[7] = (byte)(v);
     }
 
     public void toBytes(final int limit, final long[] data, final byte[] bytes) {
@@ -108,45 +127,25 @@ public class LongUtils {
         return v;
     }
 
+    public void fromBytes(final int limit, final byte[] bytes, final long[] data) {
+        int j = 0;
+        for (int i = 0; i < limit; i++) {
+            long v = 0L;
+            v|= (bytes[j++] & 0xffL) << 56;
+            v|= (bytes[j++] & 0xffL) << 48;
+            v|= (bytes[j++] & 0xffL) << 40;
+            v|= (bytes[j++] & 0xffL) << 32;
+            v|= (bytes[j++] & 0xffL) << 24;
+            v|= (bytes[j++] & 0xffL) << 16;
+            v|= (bytes[j++] & 0xffL) << 8;
+            v|= (bytes[j++] & 0xffL) << 0;
+            data[i] = v;
+        }
+    }
+
     public long pack(final int mostSignificant, final int leastSignificant) {
         return ((mostSignificant & 0xffff_ffffL)<<32)
                 | (leastSignificant & 0xffff_ffffL);
-    }
-
-    @SneakyThrows
-    public void write(final long value, final OutputStream out) {
-        var byteArray = new byte[Long.BYTES];
-        toBytes(value, byteArray);
-        out.write(byteArray);
-    }
-
-    @SneakyThrows
-    public void writeBuffer(final LongBuffer buffer, final OutputStream out) {
-        var n = 64;
-        var longArray = new long[n];
-        var byteArray = new byte[Long.BYTES * n];
-        buffer.rewind();
-        int remainingLongs = buffer.capacity();
-        while(remainingLongs>0) {
-            int size = Math.min(remainingLongs, n);
-            buffer.get(longArray, 0, size);
-            toBytes(size, longArray, byteArray);
-            out.write(byteArray, 0, size * Long.BYTES);
-            remainingLongs-=size;
-        }
-    }
-
-    @SneakyThrows
-    public LongBuffer readBuffer(final int size, final InputStream in) {
-        var buffer = LongBuffer.allocate(size);
-        var longHelper = new LongHelper();
-
-        int remainingLongs = size;
-        while(remainingLongs>0) {
-            buffer.put(longHelper.fromBytes(in.readNBytes(Long.BYTES)));
-            remainingLongs-=1;
-        }
-        return buffer;
     }
 
     // JUnit
