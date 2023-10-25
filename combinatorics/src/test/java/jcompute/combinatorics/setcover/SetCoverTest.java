@@ -24,6 +24,7 @@ import java.lang.foreign.Arena;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,7 +66,7 @@ class SetCoverTest {
     }
 
 
-    @Test// @Disabled("not yet running parallel, takes ~40s")
+    @Test @Disabled("not yet running parallel, takes ~40s")
     void cpu() {
 
         var setCover = new SetCoverFactory.LongJava(setCoverProblem, outputMem);
@@ -81,7 +82,10 @@ class SetCoverTest {
     void gpu() {
 
         var setCover = new SetCoverFactory.LongCl(ClDevice.getDefault(), setCoverProblem, outputMem);
-        setCover.run();
+
+        Timing.run("gpu", ()->{
+            setCover.run();
+        });
 
         //assert all ones
         setCoverProblem.shape().forEach(gid->{

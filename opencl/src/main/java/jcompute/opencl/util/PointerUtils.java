@@ -18,6 +18,8 @@
  */
 package jcompute.opencl.util;
 
+import java.lang.foreign.MemorySegment;
+
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacpp.LongPointer;
@@ -25,6 +27,7 @@ import org.bytedeco.javacpp.LongPointer;
 import jcompute.core.mem.ByteArray;
 import jcompute.core.mem.DoubleArray;
 import jcompute.core.mem.LongArray;
+import jcompute.core.util.primitive.LongUtils;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -36,8 +39,7 @@ public class PointerUtils {
     }
 
     public LongPointer pointer(final LongArray array) {
-        var pointer = new LongPointer(array.shape().totalSize());
-        return copy(array, pointer);
+        return new LongPointer(array.memorySegment().asByteBuffer().asLongBuffer());
     }
 
     public DoublePointer pointer(final DoubleArray array) {
@@ -82,10 +84,22 @@ public class PointerUtils {
     }
 
     public LongArray copy(final LongPointer pointer, final LongArray array) {
+        var size = array.shape().totalSize();
+        var to = array.memorySegment();
+
+        var gid = new long[] {0L};
+        var externalizer = new LongUtils.LongExternalizer((int)Math.min(1024<<2, size));
+        var block = MemorySegment.ofArray(externalizer.longArray());
+        externalizer.transfer(size,
+                (values, offset, length)->{
+                    pointer.position(gid[0]);
+                    pointer.get(values, offset, length);
+                },
+                (values, offset, length)->{
+                    MemorySegment.copy(block, 0, to, gid[0]<<3, length<<3);
+                    gid[0]+=length;
+                });
         pointer.position(0);
-        for (long gid = 0; gid < array.shape().totalSize(); gid++) {
-            array.put(gid, pointer.get(gid));
-        }
         return array;
     }
 

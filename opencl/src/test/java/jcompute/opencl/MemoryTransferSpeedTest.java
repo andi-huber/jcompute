@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.combinatorics.base;
+package jcompute.opencl;
 
 import java.io.IOException;
 import java.lang.foreign.Arena;
@@ -32,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import jcompute.core.mem.LongArray;
 import jcompute.core.shape.Shape;
 import jcompute.core.timing.Timing;
-import jcompute.opencl.ClDevice;
 import jcompute.opencl.util.PointerUtils;
 import lombok.val;
 
@@ -98,8 +97,30 @@ class MemoryTransferSpeedTest {
             }
 
             in.shape().forEach(gid->{
-                assertEquals(gid, out.get(gid));
+                assertEquals(gid, out.get(gid), ()->"at gid: " + gid);
             });
+        }
+    }
+
+    @Test
+    void pointer3() throws IOException {
+
+        try (Arena arena = Arena.ofConfined()) {
+            var mem = LongArray.of(arena, Shape.of(N));
+            mem.fill(gid->0);
+
+            try(var cl = ClDevice.getDefault().createContext()) {
+
+                pointer = PointerUtils.pointer(mem);
+                Timing.run("fill", ()->{
+                    mem.shape().forEach(gid->pointer.put(gid, gid));
+                });
+
+                mem.shape().forEach(gid->{
+                    assertEquals(gid, mem.get(gid), ()->"at gid: " + gid);
+                });
+            }
+
         }
     }
 
