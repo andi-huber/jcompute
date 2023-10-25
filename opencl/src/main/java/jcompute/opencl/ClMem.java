@@ -26,6 +26,11 @@ import org.bytedeco.opencl.global.OpenCL;
 
 import static org.bytedeco.opencl.global.OpenCL.clCreateBuffer;
 
+import jcompute.core.mem.ByteArray;
+import jcompute.core.mem.DoubleArray;
+import jcompute.core.mem.JComputeArray;
+import jcompute.core.mem.LongArray;
+import jcompute.opencl.util.PointerUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -51,8 +56,18 @@ public class ClMem implements ClResource {
 
     /**
      * Returns a new memory object for given context.
-     * @param options
-     * @param size
+     */
+    static ClMem createMemory(final ClContext context, final JComputeArray jcomputeArray, final int options) {
+        return switch (jcomputeArray) {
+        case ByteArray array -> createMemory(context, PointerUtils.pointer(array), options);
+        case LongArray array -> createMemory(context, PointerUtils.pointer(array), options);
+        case DoubleArray array -> createMemory(context, PointerUtils.pointer(array), options);
+        default -> throw new IllegalArgumentException("Unexpected value: " + jcomputeArray.getClass());
+        };
+    }
+
+    /**
+     * Returns a new memory object for given context.
      */
     static ClMem createMemory(final ClContext context, final Pointer pointer, final int options) {
         final long size = pointer.capacity();

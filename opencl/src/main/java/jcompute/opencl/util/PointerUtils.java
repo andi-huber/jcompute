@@ -34,8 +34,7 @@ import lombok.experimental.UtilityClass;
 public class PointerUtils {
 
     public BytePointer pointer(final ByteArray array) {
-        var pointer = new BytePointer(array.shape().totalSize());
-        return copy(array, pointer);
+        return new BytePointer(array.memorySegment().asByteBuffer());
     }
 
     public LongPointer pointer(final LongArray array) {
@@ -43,8 +42,7 @@ public class PointerUtils {
     }
 
     public DoublePointer pointer(final DoubleArray array) {
-        var pointer = new DoublePointer(array.shape().totalSize());
-        return copy(array, pointer);
+        return new DoublePointer(array.memorySegment().asByteBuffer().asDoubleBuffer());
     }
 
     // -- IN

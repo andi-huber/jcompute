@@ -18,12 +18,9 @@
  */
 package jcompute.combinatorics.setcover;
 
-import org.bytedeco.javacpp.BytePointer;
-
 import jcompute.core.mem.ByteArray;
 import jcompute.core.mem.LongArray;
 import jcompute.opencl.ClDevice;
-import jcompute.opencl.util.PointerUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.experimental.UtilityClass;
@@ -106,17 +103,15 @@ public class SetCoverFactory {
 
             try (val context = device.createContext()) {
 
-                var coveredPointer = new BytePointer(problem.shape().totalSize());
-
                 val queue = context.createQueue();
 
                 val program = context.createProgram(SET_COVER_SRC);
 
                 val kernel = program.createKernel("cover64");
 
-                val memA = context.createMemoryReadOnly(PointerUtils.pointer(problem.pSets()));
-                val memB = context.createMemoryReadOnly(PointerUtils.pointer(problem.kSets()));
-                val memC = context.createMemoryReadWrite(coveredPointer);
+                val memA = context.createMemoryReadOnly(problem.pSets());
+                val memB = context.createMemoryReadOnly(problem.kSets());
+                val memC = context.createMemoryReadWrite(covered);
 
                 kernel.setArgs(memA, memB, memC,
                         (int)memA.size(),
@@ -129,10 +124,6 @@ public class SetCoverFactory {
                 queue.enqueueNDRangeKernel(kernel, problem.shape());
 
                 queue.enqueueReadBuffer(memC);
-
-                queue.finish();
-                PointerUtils.copy(coveredPointer, covered);
-
             }
 
         }

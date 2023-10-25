@@ -30,6 +30,7 @@ import org.bytedeco.opencl.global.OpenCL;
 import static org.bytedeco.opencl.global.OpenCL.clCreateContext;
 import static org.bytedeco.opencl.global.OpenCL.clReleaseContext;
 
+import jcompute.core.mem.JComputeArray;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -51,14 +52,22 @@ public class ClContext implements AutoCloseable {
         return add(ClProgram.createProgram(this, programSource).build());
     }
 
+    public ClMem createMemoryReadWrite(final JComputeArray array) {
+        return add(ClMem.createMemory(this, array, OpenCL.CL_MEM_READ_WRITE));
+    }
+    public ClMem createMemoryReadOnly(final JComputeArray array) {
+        return add(ClMem.createMemory(this, array, OpenCL.CL_MEM_READ_ONLY));
+    }
+    public ClMem createMemoryWriteOnly(final JComputeArray array) {
+        return add(ClMem.createMemory(this, array, OpenCL.CL_MEM_WRITE_ONLY));
+    }
+
     public ClMem createMemoryReadWrite(final Pointer mem) {
         return add(ClMem.createMemory(this, mem, OpenCL.CL_MEM_READ_WRITE));
     }
-
     public ClMem createMemoryReadOnly(final Pointer mem) {
         return add(ClMem.createMemory(this, mem, OpenCL.CL_MEM_READ_ONLY));
     }
-
     public ClMem createMemoryWriteOnly(final Pointer mem) {
         return add(ClMem.createMemory(this, mem, OpenCL.CL_MEM_WRITE_ONLY));
     }
