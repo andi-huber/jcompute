@@ -9,8 +9,6 @@
 
 package org.tukaani.xz.index;
 
-import org.tukaani.xz.common.StreamFlags;
-
 public class BlockInfo {
     public int blockNumber = -1;
     public long compressedOffset = -1;
@@ -20,7 +18,7 @@ public class BlockInfo {
 
     IndexDecoder index;
 
-    public BlockInfo(IndexDecoder indexOfFirstStream) {
+    public BlockInfo(final IndexDecoder indexOfFirstStream) {
         index = indexOfFirstStream;
     }
 

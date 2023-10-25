@@ -23,7 +23,7 @@
 	<artifactId>jcompute-tukaani</artifactId>
 	<name>JCompute - Compression (Tukaani)</name>
 	<description>
-		JCompute - LZMA Compression Library (Tukaani)
+		JCompute - LZMA Compression Library (Tukaani v1.9)
 		Redistributed from https://github.com/tukaani-project/xz-java.
 	</description>
 

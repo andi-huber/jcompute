@@ -16,12 +16,12 @@ final class State {
     private static final int LIT_STATES = 7;
 
     private static final int LIT_LIT = 0;
-    private static final int MATCH_LIT_LIT = 1;
-    private static final int REP_LIT_LIT = 2;
+//    private static final int MATCH_LIT_LIT = 1;
+//    private static final int REP_LIT_LIT = 2;
     private static final int SHORTREP_LIT_LIT = 3;
-    private static final int MATCH_LIT = 4;
-    private static final int REP_LIT = 5;
-    private static final int SHORTREP_LIT = 6;
+//    private static final int MATCH_LIT = 4;
+//    private static final int REP_LIT = 5;
+//    private static final int SHORTREP_LIT = 6;
     private static final int LIT_MATCH = 7;
     private static final int LIT_LONGREP = 8;
     private static final int LIT_SHORTREP = 9;
@@ -32,7 +32,7 @@ final class State {
 
     State() {}
 
-    State(State other) {
+    State(final State other) {
         state = other.state;
     }
 
@@ -44,7 +44,7 @@ final class State {
         return state;
     }
 
-    void set(State other) {
+    void set(final State other) {
         state = other.state;
     }
 

@@ -9,9 +9,8 @@
 
 package org.tukaani.xz;
 
-import java.io.FilterInputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Counts the number of bytes read from an input stream.
@@ -21,10 +20,11 @@ import java.io.IOException;
 class CountingInputStream extends CloseIgnoringInputStream {
     private long size = 0;
 
-    public CountingInputStream(InputStream in) {
+    public CountingInputStream(final InputStream in) {
         super(in);
     }
 
+    @Override
     public int read() throws IOException {
         int ret = in.read();
         if (ret != -1 && size >= 0)
@@ -33,7 +33,8 @@ class CountingInputStream extends CloseIgnoringInputStream {
         return ret;
     }
 
-    public int read(byte[] b, int off, int len) throws IOException {
+    @Override
+    public int read(final byte[] b, final int off, final int len) throws IOException {
         int ret = in.read(b, off, len);
         if (ret > 0 && size >= 0)
             size += ret;
