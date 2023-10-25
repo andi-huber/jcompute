@@ -19,6 +19,7 @@
 package jcompute.core.mem;
 
 import java.io.IOException;
+import java.lang.foreign.Arena;
 import java.util.Random;
 import java.util.stream.Stream;
 
@@ -32,14 +33,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import jcompute.core.TempFileProvider;
 import jcompute.core.io.Compressor;
-import jcompute.core.mem.buffered.LongMemoryBuffered;
 import jcompute.core.shape.Shape;
 
-class LongMemoryTest {
+class ByteArrayTest {
 
-    private LongMemory<?> mem2;
-
-    static Stream<Arguments> args() {
+    static Stream<Arguments> compressors() {
         return Stream.of(
                 Arguments.of(Named.of("PassThrough", Compressor.passThrough())),
                 Arguments.of(Named.of("GZIP", Compressor.forName(CompressorStreamFactory.GZIP))),
@@ -49,23 +47,31 @@ class LongMemoryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("args")
+    @MethodSource("compressors")
     void roundtripOnExternalization(final Compressor compressor) throws IOException {
 
-        var mem = new LongMemoryBuffered(Shape.of(256, 256));
-        var rand = new Random(1234);
-        mem.fill(__->(byte)rand.nextLong(1024)); // limit the domain, so compression can have an effect
+        try(var arena = Arena.ofConfined()){
+            var mem = ByteArray.of(arena, Shape.of(256, 256));
 
-        try(var tempFile = new TempFileProvider(this.getClass())){
+            var rand = new Random(1234);
+            mem.fill(__->(byte)rand.nextInt(64)); // limit the domain, so compression can have an effect
 
-            tempFile.write(os->
-                mem.write(compressor.out(os)));
-            System.err.printf("file size: %dk%n", tempFile.get().length()/1024);
 
-            mem2 = tempFile.read(is->
-                LongMemoryBuffered.read(compressor.in(is)));
+            try(var tempFile = new TempFileProvider(this.getClass())){
+
+                tempFile.write(os->
+                    mem.write(compressor.out(os)));
+                System.err.printf("file size: %dk%n", tempFile.get().length()/1024);
+
+                ByteArray mem2 = tempFile.read(is->
+                    ByteArray.read(arena, compressor.in(is)));
+
+                assertEquals(mem, mem2);
+            }
+
         }
 
-        assertEquals(mem, mem2);
     }
+
+
 }

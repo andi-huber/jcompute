@@ -27,8 +27,7 @@ additional
     <packaging>pom</packaging>
 
     <properties>
-        <maven.compiler.release>17</maven.compiler.release>
-        <maven.compiler.arg>-parameters</maven.compiler.arg>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <bytedeco.version>1.5.9</bytedeco.version>

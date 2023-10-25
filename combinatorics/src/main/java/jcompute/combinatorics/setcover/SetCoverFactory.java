@@ -18,19 +18,15 @@
  */
 package jcompute.combinatorics.setcover;
 
-import java.util.stream.IntStream;
-
 import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.LongPointer;
 
-import jcompute.combinatorics.base.Combinations;
-import jcompute.core.mem.LongMemory;
-import jcompute.core.shape.Shape;
+import jcompute.core.mem.ByteArray;
+import jcompute.core.mem.LongArray;
 import jcompute.opencl.ClDevice;
+import jcompute.opencl.util.PointerUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.experimental.UtilityClass;
-import lombok.extern.log4j.Log4j2;
 
 @UtilityClass
 public class SetCoverFactory {
@@ -39,48 +35,40 @@ public class SetCoverFactory {
     public static class LongJava /*implements ComputeKernel*/ {
 
         //in
-        final int m;
-        final int t;
-        final LongMemory<?> kSets;
+        final SetCoverProblem problem;
         //out
-        final BytePointer covered;
+        final ByteArray covered;
 
 //        @Override
-        public void run(final Shape range) {
+        public void run() {
 
-            val pSets = pSets(range, m);
+            System.err.printf("SetCover.LongJava kSet size: %d%n", problem.kSets().shape().totalSize());
+            System.err.printf("SetCover.LongJava pSet size: %d%n", problem.pSets().shape().totalSize());
 
-            System.err.printf("SetCover.LongJava kSet size: %d%n", range.totalSize());
-
-            range.stream()
-            .parallel()
+            problem.shape().stream()
             .forEach(gid->{
-                covered.put(gid, covers(pSets.get(gid), t, kSets)
+                covered.put(gid, covers(problem.pSets().get(gid), problem.t(), problem.kSets())
                         ? (byte)1
                         : 0);
             });
         }
 
-        private static boolean covers(final long x, final int t, final LongMemory<?> kSets) {
+        private static boolean covers(final long p, final int t, final LongArray kSets) {
             return kSets.shape().stream()
                 .map(kSets::get)
-                .anyMatch(c->Long.bitCount(x & c) >= t);
+                .anyMatch(codeWord->Long.bitCount(p & codeWord) >= t);
         }
-
     }
 
     @RequiredArgsConstructor
-    @Log4j2
     static class LongCl /*implements ComputeKernel*/ {
 
-        final ClDevice device;
-
         //in
-        final int m;
-        final int t;
-        final LongMemory<?> kSets;
+        final ClDevice device;
+        final SetCoverProblem problem;
+
         //out
-        final BytePointer covered;
+        final ByteArray covered;
 
         final String SET_COVER_SRC =
         """
@@ -110,14 +98,15 @@ public class SetCoverFactory {
                 }
 
                 covered[gid] = 0; // not covered
-
             }
         """;
 
         //@Override
-        public void run(final Shape range) {
+        public void run() {
 
             try (val context = device.createContext()) {
+
+                var coveredPointer = new BytePointer(problem.shape().totalSize());
 
                 val queue = context.createQueue();
 
@@ -125,47 +114,29 @@ public class SetCoverFactory {
 
                 val kernel = program.createKernel("cover64");
 
-                val memA = context.createMemoryReadOnly(pSets(range, m));
-                val memB = context.createMemoryReadOnly(kSets(kSets));
-                val memC = context.createMemoryReadWrite(covered);
+                val memA = context.createMemoryReadOnly(PointerUtils.pointer(problem.pSets()));
+                val memB = context.createMemoryReadOnly(PointerUtils.pointer(problem.kSets()));
+                val memC = context.createMemoryReadWrite(coveredPointer);
 
                 kernel.setArgs(memA, memB, memC,
                         (int)memA.size(),
                         (int)memB.size(),
-                        t);
+                        problem.t());
 
                 queue.enqueueWriteBuffer(memA);
                 queue.enqueueWriteBuffer(memB);
 
-                queue.enqueueNDRangeKernel(kernel, range);
+                queue.enqueueNDRangeKernel(kernel, problem.shape());
 
                 queue.enqueueReadBuffer(memC);
+
+                queue.finish();
+                PointerUtils.copy(coveredPointer, covered);
 
             }
 
         }
 
-    }
-
-    // -- HELPER
-
-    private LongPointer pSets(final Shape range, final int m) {
-        val pSets = new LongPointer(range.totalSize());
-        val acc = new long[] {(1L << m) - 1};
-        range.forEach(p->{
-            pSets.put(p, acc[0]);
-            acc[0] = Combinations.next_colex(acc[0]);
-        });
-        return pSets;
-    }
-
-    private LongPointer kSets(final LongMemory<?> mem) {
-        val kSets = new LongPointer(mem.shape().totalSize());
-        IntStream.range(0, (int)mem.shape().totalSize())
-        .forEach(k->{
-            kSets.put(k, mem.get(k));
-        });
-        return kSets;
     }
 
 }

@@ -126,6 +126,13 @@ public class Timing {
         return watch.stop();
     }
 
+    public void run(final String named, final Runnable runnable) {
+        final StopWatch watch = now();
+        runnable.run();
+        watch.stop();
+        System.out.println(String.format("%s took %s", named, watch));
+    }
+
     public void runVerbose(final Logger log, final String label, final Runnable runnable) {
         run(runnable).stop().log(log, label);
     }
@@ -136,5 +143,7 @@ public class Timing {
         watch.stop().log(log, label);
         return result;
     }
+
+
 
 }

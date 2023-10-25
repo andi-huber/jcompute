@@ -20,8 +20,9 @@ package jcompute.combinatorics.setcover;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.foreign.Arena;
 
-import org.bytedeco.javacpp.BytePointer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,51 +30,62 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import jcompute.core.io.Compressor;
-import jcompute.core.mem.LongMemory;
-import jcompute.core.mem.buffered.LongMemoryBuffered;
+import jcompute.core.mem.ByteArray;
+import jcompute.core.mem.LongArray;
+import jcompute.core.timing.Timing;
 import jcompute.opencl.ClDevice;
-import lombok.val;
 
 class SetCoverTest {
 
-    private LongMemory<?> inputMem;
-    private BytePointer outputMem;
+    private ByteArray outputMem;
+    private SetCoverProblem setCoverProblem;
+    private Arena arena;
 
     @BeforeEach
     void setup() throws FileNotFoundException, IOException {
+        var stopWatch = Timing.now();
+
+        this.arena = Arena.ofConfined();
+
         try(var fis = this.getClass().getResourceAsStream("wheel-35-7-6.lzma")) {
-            this.inputMem = LongMemoryBuffered.read(Compressor.lzma().in(fis));
+            var kSets = LongArray.read(arena, Compressor.lzma().in(fis));
+            assertNotNull(kSets);
+            this.setCoverProblem = new SetCoverProblem(arena, 35, 7, 6, kSets);
         }
-        this.outputMem = new BytePointer(inputMem.shape().totalSize());
+
+        this.outputMem = ByteArray.of(arena, setCoverProblem.shape());
+
+        System.err.printf("setup took %s%n", stopWatch.stop());
+
     }
+
+    @AfterEach
+    void tearDown() {
+        arena.close();
+    }
+
 
     @Test// @Disabled("not yet running parallel, takes ~40s")
     void cpu() {
-        assertNotNull(inputMem);
 
-        val range = inputMem.shape();
-
-        var setCover = new SetCoverFactory.LongJava(7, 6, inputMem, outputMem);
-        setCover.run(range);
+        var setCover = new SetCoverFactory.LongJava(setCoverProblem, outputMem);
+        setCover.run();
 
         //assert all ones
-        range.forEach(gid->{
-            assertEquals((byte)1, outputMem.get(gid));
+        setCoverProblem.shape().forEach(gid->{
+            assertEquals((byte)1, outputMem.get(gid), ()->"at gid="+gid);
         });
     }
 
     @Test
     void gpu() {
-        assertNotNull(inputMem);
 
-        val range = inputMem.shape();
-
-        var setCover = new SetCoverFactory.LongCl(ClDevice.getDefault(), 7, 6, inputMem, outputMem);
-        setCover.run(range);
+        var setCover = new SetCoverFactory.LongCl(ClDevice.getDefault(), setCoverProblem, outputMem);
+        setCover.run();
 
         //assert all ones
-        range.forEach(gid->{
-            assertEquals((byte)1, outputMem.get(gid));
+        setCoverProblem.shape().forEach(gid->{
+            assertEquals((byte)1, outputMem.get(gid), ()->"at gid="+gid);
         });
 
     }

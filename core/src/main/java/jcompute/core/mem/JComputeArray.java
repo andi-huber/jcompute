@@ -18,28 +18,34 @@
  */
 package jcompute.core.mem;
 
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.util.Objects;
+
 import jcompute.core.shape.Shape;
 
-public interface DoubleMemory {
+public interface JComputeArray {
 
     Shape shape();
+    ValueLayout valueLayout();
+    MemorySegment memorySegment();
 
-    /**
-     * Sets the i-th element of the underlying buffer to given {@code double} value.
-     * @param gid the global index into the underlying buffer
-     * @param value the {@code double} value to copy
-     * @return this
-     */
-    DoubleMemory put(final long gid, final double value);
+    // -- EQUALITY
 
-    /**
-     * Returns the {@code double} value from the underlying buffer at global index {@code gid}.
-     * @param gid the global index into the underlying buffer
-     */
-    public double get(final long gid);
+    default boolean isEqualTo(final JComputeArray other) {
+        return Objects.equals(this.valueLayout(), other.valueLayout())
+                && Objects.equals(this.shape(), other.shape())
+                && equals(this.memorySegment(), other.memorySegment());
+    }
 
-    // -- FACTORIES
+    public static boolean equals(final JComputeArray array, final Object obj) {
+        return (obj instanceof JComputeArray other)
+                ? array.isEqualTo(other)
+                : false;
+    }
 
-
+    public static boolean equals(final MemorySegment a, final MemorySegment b) {
+        return a.mismatch(b) == -1;
+    }
 
 }

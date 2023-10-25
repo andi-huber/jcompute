@@ -18,12 +18,51 @@
  */
 package jcompute.combinatorics.base;
 
+import java.math.BigInteger;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Combinations {
 
-    public static long next_colex(long x) {
+    /**
+     * Also known as {@literal n choose k}.
+     * @return {@code n! / (k!(n-k)!)}
+     */
+    public BigInteger binomial(final int n, final int k) {
+        if ((n == k) || (k == 0)) {
+            return BigInteger.ONE;
+        }
+        if (n < k) {
+            return BigInteger.ZERO;
+        }
+        if (k > (n >> 1)) {
+            return binomial(n, n - k);
+        }
+        BigInteger nominator = BigInteger.ONE;
+        BigInteger divisor = BigInteger.ONE;
+        for (int i = 1; i <= k; i++) {
+            divisor = divisor.multiply(BigInteger.valueOf(i));
+            nominator = nominator.multiply(BigInteger.valueOf(n - i + 1));
+        }
+        return nominator.divide(divisor);
+    }
+
+    /**
+     * Also known as {@literal n choose k}.
+     * @return {@code n! / (k!(n-k)!)}
+     */
+    public long binomialAsLongValueExact(final int n, final int k) {
+        if ((n == k) || (k == 0)) {
+            return 1;
+        }
+        if (n < k) {
+            return 0;
+        }
+        return binomial(n, k).longValueExact();
+    }
+
+    public long next_colex(long x) {
         long r = x & -x; // lowest set bit
         x += r; // replace lowest block by a one left to it
         //      if ( 0==x ) return 0; // input was last combination

@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.core.util.io;
+package jcompute.core.util.primitive;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,10 +30,10 @@ import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class ChannelUtils {
+public class ByteUtils {
 
     @SneakyThrows
-    public void write(final ByteBuffer buffer, final OutputStream out) {
+    public void writeToBuffer(final ByteBuffer buffer, final OutputStream out) {
         final int size = buffer.capacity();
         try(WritableByteChannel channel = Channels.newChannel(out)){
             buffer.rewind();
@@ -45,19 +45,17 @@ public class ChannelUtils {
     }
 
     @SneakyThrows
-    public static ByteBuffer readBytes(final int size, final InputStream in) {
-        var buffer = ByteBuffer.allocate(size);
+    public void readIntoBuffer(final long size, final InputStream in, final ByteBuffer byteBuffer) {
         try(ReadableByteChannel channel = Channels.newChannel(in)) {
-            int count = 0;
+            long count = 0;
             while(count<size) {
-                int read = channel.read(buffer);
+                int read = channel.read(byteBuffer);
                 if(read==-1) break;
                 count+= read;
             }
             if(count!=size) {
                 throw new IOException(String.format("Could only read %d of %d bytes.", count, size));
             }
-            return buffer;
         }
     }
 

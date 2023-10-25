@@ -18,12 +18,17 @@
  */
 package jcompute.opencl;
 
+import java.lang.foreign.Arena;
+import java.util.ArrayList;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import jcompute.core.mem.DoubleMemory;
+import jcompute.core.mem.DoubleArray;
 import jcompute.core.shape.Shape;
+import jcompute.opencl.util.PointerUtils;
 import lombok.val;
 
 class ClKernelTest {
@@ -38,61 +43,74 @@ class ClKernelTest {
 
     @Test
     void vecAdd() {
+
+        var errors = new ArrayList<Throwable>();
+
         System.err.println("--- vecAdd ---");
         try {
-            ClDevice.streamAll().forEach(this::vecAdd);
+            ClDevice.streamAll()
+                .filter(dev->dev.getType().isGPU())
+                .forEach(this::vecAdd);
         } catch (Throwable e) {
             System.err.println(" - ERR");
+            errors.add(e);
             e.printStackTrace();
         } finally {
             System.err.println("------");
         }
+
+        assertTrue(errors.isEmpty());
     }
 
     void vecAdd(final ClDevice device) {
 
         System.err.printf("vecAdd(%s)", device);
 
-        /* Initialize Data */
-        DoubleMemoryCL mem = new DoubleMemoryCL(Shape.of(MEM_SIZE));
-        mem.shape().forEach(gid->mem.put(gid, gid));
+        try(var arena = Arena.ofConfined()) {
 
-        /* Create OpenCL Context */
-        try(val context = device.createContext()) {
+            /* Initialize Data */
+            DoubleArray mem = DoubleArray.of(arena, Shape.of(MEM_SIZE));
+            mem.shape().forEach(gid->mem.put(gid, gid));
 
-            /* Create Command Queue */
-            val queue = context.createQueue();
+            /* Create OpenCL Context */
+            try(val context = device.createContext()) {
 
-            /* Create Kernel program from the read in source */
-            val program = context.createProgram(VEC_ADD_SRC);
+                var pointer = PointerUtils.pointer(mem);
 
-            /* Create OpenCL Kernel */
-            val kernel = program.createKernel("vecAdd");
+                /* Create Command Queue */
+                val queue = context.createQueue();
 
-            /* Create memory buffer*/
-            val memObj = context.createMemoryReadWrite(mem.buffer());
+                /* Create Kernel program from the read in source */
+                val program = context.createProgram(VEC_ADD_SRC);
 
-            /* Set OpenCL kernel argument */
-            kernel.setArgs(memObj);
+                /* Create OpenCL Kernel */
+                val kernel = program.createKernel("vecAdd");
 
-            queue.enqueueWriteBuffer(memObj);
+                /* Create memory buffer*/
+                val memObj = context.createMemoryReadWrite(pointer);
 
-            // run kernel 2 times
-            for (int j = 0; j < 2; j++) {
-                queue.enqueueNDRangeKernel(kernel, mem.shape());
+                /* Set OpenCL kernel argument */
+                kernel.setArgs(memObj);
+
+                queue.enqueueWriteBuffer(memObj);
+
+                // run kernel 2 times
+                for (int j = 0; j < 2; j++) {
+                    queue.enqueueNDRangeKernel(kernel, mem.shape());
+                }
+
+                queue.enqueueReadBuffer(memObj);
+                queue.finish();
+                validate(PointerUtils.copy(pointer, mem));
+
             }
 
-            queue.enqueueReadBuffer(memObj);
-
-            validate(mem);
-
+            System.err.println(" - OK");
         }
-
-        System.err.println(" - OK");
 
     }
 
-    static void validate(final DoubleMemory mem) {
+    static void validate(final DoubleArray mem) {
         mem.shape().forEach(gid->
             assertEquals(4.*gid, mem.get(gid), 1E-6));
     }
