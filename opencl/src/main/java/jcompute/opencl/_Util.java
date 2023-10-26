@@ -37,6 +37,7 @@ class _Util {
 
     public void assertSuccess(final int ret, final Supplier<String> message) {
         if(ret!=OpenCL.CL_SUCCESS) {
+            System.err.printf("%s%n", message.get());
             throw new IllegalStateException(message.get());
         }
     }

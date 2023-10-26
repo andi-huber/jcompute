@@ -18,12 +18,8 @@
  */
 package jcompute.combinatorics.setcover;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.lang.foreign.Arena;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -35,62 +31,69 @@ import jcompute.core.mem.ByteArray;
 import jcompute.core.mem.LongArray;
 import jcompute.core.timing.Timing;
 import jcompute.opencl.ClDevice;
+import lombok.SneakyThrows;
 
 class SetCoverTest {
 
     private ByteArray outputMem;
-    private SetCoverProblem setCoverProblem;
-    private Arena arena;
+    private SetCoverParams setCoverParams;
 
-    @BeforeEach
-    void setup() throws FileNotFoundException, IOException {
-        var stopWatch = Timing.now();
-
-        this.arena = Arena.ofConfined();
-
-        try(var fis = this.getClass().getResourceAsStream("wheel-35-7-6.lzma")) {
-            var kSets = LongArray.read(arena, Compressor.lzma().in(fis));
-            assertNotNull(kSets);
-            this.setCoverProblem = new SetCoverProblem(arena, 35, 7, 6, kSets);
-        }
-
-        this.outputMem = ByteArray.of(arena, setCoverProblem.shape());
-
-        System.err.printf("setup took %s%n", stopWatch.stop());
-
-    }
-
-    @AfterEach
-    void tearDown() {
-        arena.close();
-    }
-
-
-    @Test @Disabled("not yet running parallel, takes ~40s")
+    @Test @Disabled("takes ~410s")
     void cpu() {
 
-        var setCover = new SetCoverFactory.LongJava(setCoverProblem, outputMem);
-        setCover.run();
+        try(Arena arena = Arena.ofShared()) {
 
-        //assert all ones
-        setCoverProblem.shape().forEach(gid->{
-            assertEquals((byte)1, outputMem.get(gid), ()->"at gid="+gid);
-        });
+            setup(arena);
+
+            var setCover = new SetCoverKernels.Java64Bit(setCoverParams, outputMem);
+            setCover.run();
+
+            validate();
+        }
     }
 
     @Test
     void gpu() {
 
-        var setCover = new SetCoverFactory.LongCl(ClDevice.getDefault(), setCoverProblem, outputMem);
+        try(Arena arena = Arena.ofConfined()) {
 
-        Timing.run("gpu", ()->{
-            setCover.run();
-        });
+            setup(arena);
 
-        //assert all ones
-        setCoverProblem.shape().forEach(gid->{
-            assertEquals((byte)1, outputMem.get(gid), ()->"at gid="+gid);
-        });
+            var setCover = new SetCoverKernels.OpenCL64Bit(ClDevice.getDefault(), setCoverParams, outputMem);
+
+            Timing.run("gpu", ()->{
+                setCover.run();
+            });
+
+            validate();
+        }
 
     }
+
+    // -- HELPER
+
+    @SneakyThrows
+    private void setup(final Arena arena) {
+        var stopWatch = Timing.now();
+
+        try(var fis = this.getClass().getResourceAsStream("wheel-35-7-6.lzma")) {
+            var kSets = LongArray.read(arena, Compressor.lzma().in(fis));
+            assertNotNull(kSets);
+            this.setCoverParams = new SetCoverParams(arena, 35, 7, 6, kSets);
+        }
+
+        this.outputMem = ByteArray.of(arena, setCoverParams.shape());
+        stopWatch.stop();
+
+        System.out.printf("setup %s%n", setCoverParams);
+        System.out.printf("setup took %s%n", stopWatch);
+    }
+
+    private void validate() {
+        //assert all ones
+        setCoverParams.shape().forEach(gid->{
+            assertEquals((byte)1, outputMem.get(gid), ()->"at gid="+gid);
+        });
+    }
+
 }

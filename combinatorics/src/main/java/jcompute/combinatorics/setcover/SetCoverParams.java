@@ -25,14 +25,14 @@ import jcompute.core.mem.LongArray;
 import jcompute.core.shape.Shape;
 import lombok.val;
 
-public record SetCoverProblem(
+public record SetCoverParams(
         int v,
         int m,
         int t,
         LongArray kSets,
         LongArray pSets) {
 
-    SetCoverProblem(
+    SetCoverParams(
             final Arena arena,
             final int v,
             final int m,

@@ -26,25 +26,21 @@ import lombok.val;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class SetCoverFactory {
+public class SetCoverKernels {
 
     @RequiredArgsConstructor
-    public static class LongJava /*implements ComputeKernel*/ {
+    public static class Java64Bit {
 
         //in
-        final SetCoverProblem problem;
+        final SetCoverParams params;
         //out
         final ByteArray covered;
 
-//        @Override
         public void run() {
-
-            System.err.printf("SetCover.LongJava kSet size: %d%n", problem.kSets().shape().totalSize());
-            System.err.printf("SetCover.LongJava pSet size: %d%n", problem.pSets().shape().totalSize());
-
-            problem.shape().stream()
+            params.shape().stream()
+            .parallel()
             .forEach(gid->{
-                covered.put(gid, covers(problem.pSets().get(gid), problem.t(), problem.kSets())
+                covered.put(gid, covers(params.pSets().get(gid), params.t(), params.kSets())
                         ? (byte)1
                         : 0);
             });
@@ -58,16 +54,15 @@ public class SetCoverFactory {
     }
 
     @RequiredArgsConstructor
-    static class LongCl /*implements ComputeKernel*/ {
+    static class OpenCL64Bit /*implements ComputeKernel*/ {
 
         //in
         final ClDevice device;
-        final SetCoverProblem problem;
-
+        final SetCoverParams params;
         //out
         final ByteArray covered;
 
-        final String SET_COVER_SRC =
+        final String setCoverKernelSource =
         """
             __kernel void cover64(
                 __global const unsigned long* pSets,
@@ -98,36 +93,31 @@ public class SetCoverFactory {
             }
         """;
 
-        //@Override
         public void run() {
-
             try (val context = device.createContext()) {
 
                 val queue = context.createQueue();
 
-                val program = context.createProgram(SET_COVER_SRC);
+                val program = context.createProgram(setCoverKernelSource);
 
                 val kernel = program.createKernel("cover64");
 
-                val memA = context.createMemoryReadOnly(problem.pSets());
-                val memB = context.createMemoryReadOnly(problem.kSets());
-                val memC = context.createMemoryReadWrite(covered);
+                val memA = context.createMemoryReadOnly(params.pSets());
+                val memB = context.createMemoryReadOnly(params.kSets());
+                val memC = context.createMemoryWriteOnly(covered);
 
                 kernel.setArgs(memA, memB, memC,
                         (int)memA.size(),
                         (int)memB.size(),
-                        problem.t());
+                        params.t());
 
                 queue.enqueueWriteBuffer(memA);
                 queue.enqueueWriteBuffer(memB);
 
-                queue.enqueueNDRangeKernel(kernel, problem.shape());
+                queue.enqueueNDRangeKernel(kernel, params.shape());
 
                 queue.enqueueReadBuffer(memC);
             }
-
         }
-
     }
-
 }
