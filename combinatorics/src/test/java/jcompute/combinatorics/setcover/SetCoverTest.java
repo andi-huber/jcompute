@@ -53,7 +53,10 @@ class SetCoverTest {
     }
 
     /**
-     * AMD RADEON RX 7600: 5800ms per iteration at 144W, 2950MHz
+     * <pre>
+     * AMD Radeon RX 7600: 5800ms per iteration at 144W, 2950MHz (32 CUs)
+     * TODO verify... AMD Radeon RX 6950XT: 3000ms per iteration at 200W, 1860MHz (80 CUs)
+     * </pre>
      */
     @Test
     void gpu() {
