@@ -52,6 +52,9 @@ class SetCoverTest {
         }
     }
 
+    /**
+     * AMD RADEON RX 7600: 5800ms per iteration at 144W, 2950MHz
+     */
     @Test
     void gpu() {
 
@@ -61,9 +64,11 @@ class SetCoverTest {
 
             var setCover = new SetCoverKernels.OpenCL64Bit(ClDevice.getDefault(), setCoverParams, outputMem);
 
-            Timing.run("gpu", ()->{
-                setCover.run();
-            });
+            //for (int i = 0; i < 100; i++) {
+                Timing.run("gpu", ()->{
+                    setCover.run();
+                });
+            //}
 
             validate();
         }
