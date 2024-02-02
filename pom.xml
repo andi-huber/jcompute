@@ -30,7 +30,7 @@ additional
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <bytedeco.version>1.5.9</bytedeco.version>
+        <bytedeco.version>1.5.10</bytedeco.version>
         <commons-compress.version>1.24.0</commons-compress.version>
         <log4j.version>2.21.0</log4j.version>
 
