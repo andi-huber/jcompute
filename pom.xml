@@ -34,7 +34,7 @@ additional
         <commons-compress.version>1.24.0</commons-compress.version>
         <log4j.version>2.21.0</log4j.version>
 
-        <lombok-version>1.18.30</lombok-version>
+        <lombok-version>1.18.32</lombok-version>
         <!-- testing -->
         <junit-version>[5,)</junit-version>
         <surefire-plugin.argLine>-Xmx384m</surefire-plugin.argLine>
