@@ -41,7 +41,13 @@ public class ClMem implements ClResource {
 
     @Getter @Accessors(fluent = true) private final _cl_mem id;
     @Getter private final ClContext context;
+    /**
+     * The number of elements contained in the underlying array.
+     */
     @Getter @Accessors(fluent = true) private final long size;
+    /**
+     * The number bytes (required) for each element in the underlying array.
+     */
     @Getter @Accessors(fluent = true) private final int sizeOf;
     @Getter private final Pointer pointer;
 
