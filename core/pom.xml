@@ -36,8 +36,8 @@ additional
     <dependencies>
 
         <dependency>
-            <groupId>jcompute</groupId>
-            <artifactId>jcompute-tukaani</artifactId>
+            <groupId>org.tukaani</groupId>
+            <artifactId>xz</artifactId>
         </dependency>
         
         <dependency>
