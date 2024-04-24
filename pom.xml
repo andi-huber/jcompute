@@ -33,10 +33,11 @@ additional
         <bytedeco.version>1.5.10</bytedeco.version>
         <commons-compress.version>1.24.0</commons-compress.version>
         <log4j.version>2.21.0</log4j.version>
-
-        <lombok-version>1.18.32</lombok-version>
+        
+        <lombok.version>1.18.32</lombok.version>
+        
         <!-- testing -->
-        <junit-version>[5,)</junit-version>
+        <junit.version>5.10.2</junit.version>
         <surefire-plugin.argLine>-Xmx384m</surefire-plugin.argLine>
     </properties>
 
@@ -79,7 +80,7 @@ additional
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>${lombok-version}</version>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -167,7 +168,7 @@ additional
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>${lombok-version}</version>
+                <version>${lombok.version}</version>
             </dependency>
 
             <dependency>
@@ -181,19 +182,19 @@ additional
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-api</artifactId>
-                <version>${junit-version}</version>
+                <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
-                <version>${junit-version}</version>
+                <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-params</artifactId>
-                <version>${junit-version}</version>
+                <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
 
