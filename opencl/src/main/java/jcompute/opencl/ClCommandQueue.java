@@ -30,11 +30,12 @@ import static org.bytedeco.opencl.global.OpenCL.clEnqueueWriteBuffer;
 import static org.bytedeco.opencl.global.OpenCL.clFinish;
 import static org.bytedeco.opencl.global.OpenCL.clFlush;
 
-import jcompute.core.shape.Shape;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.experimental.Accessors;
+
+import jcompute.core.shape.Shape;
 
 @RequiredArgsConstructor
 public class ClCommandQueue implements ClResource {
@@ -59,6 +60,14 @@ public class ClCommandQueue implements ClResource {
                 new SizeTPointer(localSize.sizeX(), localSize.sizeY(), localSize.sizeZ()));
     }
 
+    public ClCommandQueue flush() {
+        final int ret = clFlush(id());
+        _Util.assertSuccess(
+                ret, ()->
+                    String.format("failed to flush command queue for context %s", context));
+        return this;
+    }
+
     public ClCommandQueue finish() {
         final int ret = clFinish(id());
         _Util.assertSuccess(
@@ -80,18 +89,10 @@ public class ClCommandQueue implements ClResource {
 
     @Override
     public void free() {
+        flush();
+        finish();
 
-        int ret;
-
-        try {
-            /* Finalization */
-            ret = clFlush(id());
-            ret = clFinish(id());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        ret = OpenCL.clReleaseCommandQueue(id());
+        int ret = OpenCL.clReleaseCommandQueue(id());
         _Util.assertSuccess(
                 ret, ()->
                     String.format("failed to release command queue for context %s", context));
@@ -105,7 +106,12 @@ public class ClCommandQueue implements ClResource {
      */
     static ClCommandQueue createQueue(final ClContext context) {
         val deviceId = context.getSingleDeviceElseFail().id();
-        val properties = new long[] {};
+        val properties = new long[] {
+//                OpenCL.CL_QUEUE_PROPERTIES,
+//                | OpenCL.CL_QUEUE_ON_DEVICE
+//                | OpenCL.CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE,
+                0}; // zero terminated list of queue creation properties
+        // https://registry.khronos.org/OpenCL/sdk/3.0/docs/man/html/clCreateCommandQueueWithProperties.html
         val ret_pointer = new int[1];
         val queueId = OpenCL.clCreateCommandQueueWithProperties(context.id(), deviceId, properties, ret_pointer);
         val ret = ret_pointer[0];

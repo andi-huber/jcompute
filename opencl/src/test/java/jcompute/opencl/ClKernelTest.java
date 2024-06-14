@@ -26,9 +26,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import lombok.val;
+
 import jcompute.core.mem.DoubleArray;
 import jcompute.core.shape.Shape;
-import lombok.val;
 
 class ClKernelTest {
 
@@ -68,7 +69,7 @@ class ClKernelTest {
         try(var arena = Arena.ofConfined()) {
 
             /* Initialize Data */
-            DoubleArray mem = DoubleArray.of(arena, Shape.of(MEM_SIZE));
+            var mem = DoubleArray.of(arena, Shape.of(MEM_SIZE));
             mem.shape().forEach(gid->mem.put(gid, gid));
 
             /* Create OpenCL Context */

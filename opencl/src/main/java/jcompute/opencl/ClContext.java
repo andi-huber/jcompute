@@ -19,8 +19,8 @@
 package jcompute.opencl;
 
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Stack;
 
 import org.bytedeco.javacpp.IntPointer;
 import org.bytedeco.javacpp.Pointer;
@@ -30,19 +30,20 @@ import org.bytedeco.opencl.global.OpenCL;
 import static org.bytedeco.opencl.global.OpenCL.clCreateContext;
 import static org.bytedeco.opencl.global.OpenCL.clReleaseContext;
 
-import jcompute.core.mem.JComputeArray;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import lombok.experimental.Accessors;
 
+import jcompute.core.mem.JComputeArray;
+
 @RequiredArgsConstructor
 public class ClContext implements AutoCloseable {
 
     @Getter @Accessors(fluent = true) private final _cl_context id;
     @Getter private final List<ClDevice> devices;
-    @Getter private final List<ClResource> childResources;
+    @Getter private final Stack<ClResource> childResources;
 
     public ClCommandQueue createQueue() {
         return add(ClCommandQueue.createQueue(this));
@@ -82,7 +83,9 @@ public class ClContext implements AutoCloseable {
 
     @Override
     public void close() {
-        childResources.forEach(ClResource::free);
+        while(!childResources.isEmpty()) {
+            childResources.pop().free();
+        }
         final int ret = clReleaseContext(id());
         _Util.assertSuccess(ret, ()->
             String.format("failed to release context for devices %s", devices));
@@ -106,7 +109,7 @@ public class ClContext implements AutoCloseable {
     // -- HELPER
 
     private <T extends ClResource> T add(final T resource) {
-        this.childResources.add(0, resource);
+        childResources.push(resource);
         return resource;
     }
 
@@ -121,7 +124,7 @@ public class ClContext implements AutoCloseable {
         val ret = ret_pointer.get();
         _Util.assertSuccess(ret, ()->
                 String.format("failed to create context for device %s", device.getName()));
-        return new ClContext(contextId, List.of(device), new LinkedList<ClResource>());
+        return new ClContext(contextId, List.of(device), new Stack<ClResource>());
     }
 
 

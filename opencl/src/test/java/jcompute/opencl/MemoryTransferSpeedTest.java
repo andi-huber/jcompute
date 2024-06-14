@@ -29,11 +29,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import lombok.val;
+
 import jcompute.core.mem.LongArray;
 import jcompute.core.shape.Shape;
 import jcompute.core.timing.Timing;
 import jcompute.opencl.util.PointerUtils;
-import lombok.val;
 
 class MemoryTransferSpeedTest {
 
@@ -85,7 +86,7 @@ class MemoryTransferSpeedTest {
             var out = LongArray.of(arena, Shape.of(N));
             in.fill(gid->gid);
 
-            try(var cl = ClDevice.getDefault().createContext()) {
+            //try(var cl = ClDevice.getDefault().createContext()) {
 
                 Timing.run("tx-in", ()->{
                     pointer = PointerUtils.pointer(in);
@@ -94,7 +95,7 @@ class MemoryTransferSpeedTest {
                     PointerUtils.copy(pointer, out);
                 });
 
-            }
+            //}
 
             in.shape().forEach(gid->{
                 assertEquals(gid, out.get(gid), ()->"at gid: " + gid);
@@ -109,7 +110,7 @@ class MemoryTransferSpeedTest {
             var mem = LongArray.of(arena, Shape.of(N));
             mem.fill(gid->0);
 
-            try(var cl = ClDevice.getDefault().createContext()) {
+            //try(var cl = ClDevice.getDefault().createContext()) {
 
                 pointer = PointerUtils.pointer(mem);
                 Timing.run("fill", ()->{
@@ -119,7 +120,7 @@ class MemoryTransferSpeedTest {
                 mem.shape().forEach(gid->{
                     assertEquals(gid, mem.get(gid), ()->"at gid: " + gid);
                 });
-            }
+            //}
 
         }
     }
