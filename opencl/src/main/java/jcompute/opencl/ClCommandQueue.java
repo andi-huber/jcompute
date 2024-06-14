@@ -101,7 +101,7 @@ public class ClCommandQueue implements ClResource {
         // zero terminated list of queue creation properties
         // https://registry.khronos.org/OpenCL/sdk/3.0/docs/man/html/clCreateCommandQueueWithProperties.html
         cl_queue_properties properties = new cl_queue_properties();
-        int[] ret_pointer = new int[0];
+        int[] ret_pointer = new int[1];
         val queueId = CL.clCreateCommandQueueWithProperties(context.id(), deviceId, properties, ret_pointer );
         val ret = ret_pointer[0];
         _Util.assertSuccess(ret, ()->
