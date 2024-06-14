@@ -22,6 +22,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.lang.foreign.ValueLayout.OfShort;
 import java.nio.ShortBuffer;
 
 import jcompute.core.shape.Shape;
@@ -30,8 +31,10 @@ public record ShortArray(
         Shape shape,
         MemorySegment memorySegment) implements JComputeArray {
 
+    final static OfShort VALUE_LAYOUT = ValueLayout.JAVA_SHORT;
+
     public static ShortArray of(final Arena arena, final Shape shape) {
-        var layout = MemoryLayout.sequenceLayout(shape.totalSize(), ValueLayout.JAVA_SHORT);
+        var layout = MemoryLayout.sequenceLayout(shape.totalSize(), VALUE_LAYOUT);
         var memorySegment = arena.allocate(layout);
         return new ShortArray(shape, memorySegment);
     }
@@ -39,32 +42,32 @@ public record ShortArray(
     public static ShortArray wrap(final Arena arena, final short[] values) {
         var array = ShortArray.of(arena, Shape.of(values.length));
         for (int i = 0; i < values.length; i++) {
-            array.memorySegment.setAtIndex(ValueLayout.JAVA_SHORT, i, values[i]);
+            array.memorySegment.setAtIndex(VALUE_LAYOUT, i, values[i]);
         }
         return array;
     }
 
     @Override
     public ValueLayout valueLayout() {
-        return ValueLayout.JAVA_SHORT;
+        return VALUE_LAYOUT;
     }
 
     /**
-     * Returns the {@code long} value from the underlying buffer at global index {@code gid}.
+     * Returns the {@code short} value from the underlying buffer at global index {@code gid}.
      * @param gid the global index into the underlying buffer
      */
     public short get(final long gid) {
-        return memorySegment.getAtIndex(ValueLayout.JAVA_SHORT, gid);
+        return memorySegment.getAtIndex(VALUE_LAYOUT, gid);
     }
 
     /**
-     * Sets the i-th element of the underlying buffer to given {@code long} value.
+     * Sets the i-th element of the underlying buffer to given {@code short} value.
      * @param gid the global index into the underlying buffer
-     * @param value the {@code long} value to copy
+     * @param value the {@code short} value to copy
      * @return this
      */
     public ShortArray put(final long gid, final short value) {
-        memorySegment.setAtIndex(ValueLayout.JAVA_SHORT, gid, value);
+        memorySegment.setAtIndex(VALUE_LAYOUT, gid, value);
         return this;
     }
 
@@ -98,7 +101,7 @@ public record ShortArray(
     }
 
 //    public short[] toArray() {
-//        return toBuffer().array();
+//        return memorySegment().toArray(ValueLayout.JAVA_SHORT);
 //    }
 
     // -- CONTRACT

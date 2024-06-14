@@ -78,8 +78,13 @@ public class ClProgram implements ClResource {
     static ClProgram buildProgram(final ClProgram program) {
         val deviceId = program.getContext().getSingleDeviceElseFail().id();
 
+        // https://www.intel.com/content/www/us/en/docs/opencl-sdk/developer-reference-processor-graphics/2015-1/optimization-options.html
+        String options = null; // all enabled by default
+                //"-cl-opt-disable";
+                //"-cl-mad-enable";
+
         /* Build Kernel Program */
-        int ret = CL.clBuildProgram(program.id(), 1, new cl_device_id[] {deviceId}, "-cl-mad-enable", null, null);
+        int ret = CL.clBuildProgram(program.id(), 1, new cl_device_id[] {deviceId}, options, null, null);
         _Util.assertSuccess(ret, ()->
             String.format("failed to build program %s%n"
                     + "build-log: %s",

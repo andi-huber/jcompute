@@ -64,13 +64,6 @@ public class ClMem implements ClResource {
         int sizeOf = jcomputeArray.bytesPerElement();
         long size = jcomputeArray.shape().totalSize();
 
-        val ret_pointer = new int[1];
-        val memId = CL.clCreateBuffer(context.id(), options,
-                size * sizeOf, null, ret_pointer);
-        val ret = ret_pointer[0];
-        _Util.assertSuccess(ret, ()->
-                String.format("failed to create memory object (size=%d*%d) for context %s", sizeOf, size, context));
-
         final Pointer pointer = switch (jcomputeArray) {
             case ByteArray array -> Pointer.to(array.toBuffer());
             case ShortArray array -> Pointer.to(array.toBuffer());
@@ -78,6 +71,13 @@ public class ClMem implements ClResource {
             case DoubleArray array -> Pointer.to(array.toBuffer());
             default -> throw new IllegalArgumentException("Unexpected value: " + jcomputeArray.getClass());
         };
+
+        val ret_pointer = new int[1];
+        val memId = CL.clCreateBuffer(context.id(), options,
+                size * sizeOf, null, ret_pointer);
+        val ret = ret_pointer[0];
+        _Util.assertSuccess(ret, ()->
+                String.format("failed to create memory object (size=%d*%d) for context %s", sizeOf, size, context));
 
         return new ClMem(memId, context, size, sizeOf, pointer);
     }
