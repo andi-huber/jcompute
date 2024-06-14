@@ -24,6 +24,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.nio.LongBuffer;
 import java.util.function.LongUnaryOperator;
 
 import jcompute.core.shape.Shape;
@@ -94,6 +95,14 @@ public record LongArray(
     @Override
     public int bytesPerElement() {
         return 8;
+    }
+
+    public LongBuffer toBuffer() {
+        return memorySegment.asByteBuffer().asLongBuffer();
+    }
+
+    public long[] toArray() {
+        return toBuffer().array();
     }
 
     // -- CONTRACT

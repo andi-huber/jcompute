@@ -31,7 +31,7 @@ import jcompute.core.mem.ByteArray;
 import jcompute.core.mem.DoubleArray;
 import jcompute.core.mem.JComputeArray;
 import jcompute.core.mem.LongArray;
-import jcompute.opencl.util.PointerUtils;
+import jcompute.core.mem.ShortArray;
 
 @RequiredArgsConstructor
 public class ClMem implements ClResource {
@@ -61,20 +61,21 @@ public class ClMem implements ClResource {
      * Returns a new memory object for given context.
      */
     static ClMem createMemory(final ClContext context, final JComputeArray jcomputeArray, final long options) {
-        long size = jcomputeArray.shape().totalSize();
         int sizeOf = jcomputeArray.bytesPerElement();
+        long size = jcomputeArray.shape().totalSize();
 
         val ret_pointer = new int[1];
         val memId = CL.clCreateBuffer(context.id(), options,
                 size * sizeOf, null, ret_pointer);
         val ret = ret_pointer[0];
         _Util.assertSuccess(ret, ()->
-                String.format("failed to create memory object for context %s", context));
+                String.format("failed to create memory object (size=%d*%d) for context %s", sizeOf, size, context));
 
         final Pointer pointer = switch (jcomputeArray) {
-            case ByteArray array -> PointerUtils.pointerJocl(array);
-            case LongArray array -> PointerUtils.pointerJocl(array);
-            case DoubleArray array -> PointerUtils.pointerJocl(array);
+            case ByteArray array -> Pointer.to(array.toBuffer());
+            case ShortArray array -> Pointer.to(array.toBuffer());
+            case LongArray array -> Pointer.to(array.toBuffer());
+            case DoubleArray array -> Pointer.to(array.toBuffer());
             default -> throw new IllegalArgumentException("Unexpected value: " + jcomputeArray.getClass());
         };
 
@@ -82,3 +83,4 @@ public class ClMem implements ClResource {
     }
 
 }
+

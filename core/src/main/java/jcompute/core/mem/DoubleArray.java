@@ -22,6 +22,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.nio.DoubleBuffer;
 
 import jcompute.core.shape.Shape;
 
@@ -70,6 +71,14 @@ public record DoubleArray(
     @Override
     public int bytesPerElement() {
         return 8;
+    }
+
+    public DoubleBuffer toBuffer() {
+        return memorySegment.asByteBuffer().asDoubleBuffer();
+    }
+
+    public double[] toArray() {
+        return toBuffer().array();
     }
 
     // -- CONTRACT
