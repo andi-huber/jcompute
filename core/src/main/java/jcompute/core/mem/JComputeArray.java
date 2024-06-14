@@ -29,6 +29,7 @@ public interface JComputeArray {
     Shape shape();
     ValueLayout valueLayout();
     MemorySegment memorySegment();
+    int bytesPerElement();
 
     // -- EQUALITY
 

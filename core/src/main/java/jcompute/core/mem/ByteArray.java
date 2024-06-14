@@ -90,6 +90,11 @@ public record ByteArray(
         return this;
     }
 
+    @Override
+    public int bytesPerElement() {
+        return 1;
+    }
+
     // -- CONTRACT
 
     @Override

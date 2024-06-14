@@ -24,18 +24,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.IntPointer;
-import org.bytedeco.javacpp.LongPointer;
-import org.bytedeco.javacpp.Pointer;
-import org.bytedeco.javacpp.PointerPointer;
-import org.bytedeco.javacpp.SizeTPointer;
-import org.bytedeco.opencl._cl_device_id;
-import org.bytedeco.opencl.global.OpenCL;
+import org.jocl.CL;
+import org.jocl.cl_device_id;
 
-import static org.bytedeco.opencl.global.OpenCL.CL_DEVICE_TYPE_ALL;
-import static org.bytedeco.opencl.global.OpenCL.clGetDeviceIDs;
-import static org.bytedeco.opencl.global.OpenCL.clGetDeviceInfo;
+import static org.jocl.CL.clGetDeviceIDs;
+import static org.jocl.CL.clGetDeviceInfo;
 
 import lombok.Getter;
 import lombok.val;
@@ -55,9 +48,9 @@ public class ClDevice {
 
         static DeviceType fromClDeviceType(final int cl_device_type) {
             switch (cl_device_type) {
-            case OpenCL.CL_DEVICE_TYPE_CPU: return CPU;
-            case OpenCL.CL_DEVICE_TYPE_GPU: return GPU;
-            case OpenCL.CL_DEVICE_TYPE_ACCELERATOR: return ACCELERATOR;
+            case (int)CL.CL_DEVICE_TYPE_CPU: return CPU;
+            case (int)CL.CL_DEVICE_TYPE_GPU: return GPU;
+            case (int)CL.CL_DEVICE_TYPE_ACCELERATOR: return ACCELERATOR;
             default:
                 return OTHER;
             }
@@ -81,12 +74,12 @@ public class ClDevice {
 
     @Getter private final ClPlatform platform;
     @Getter private final int index;
-    @Getter @Accessors(fluent = true) private final _cl_device_id id;
+    @Getter @Accessors(fluent = true) private final cl_device_id id;
 
     private ClDevice(
             final ClPlatform platform,
             final int index,
-            final _cl_device_id deviceHandle) {
+            final cl_device_id deviceHandle) {
         this.platform = platform;
         this.index = index;
         this.id = deviceHandle;
@@ -98,27 +91,27 @@ public class ClDevice {
     }
 
     public DeviceType getType() {
-        return DeviceType.fromClDeviceType(getInt(id, OpenCL.CL_DEVICE_TYPE));
+        return DeviceType.fromClDeviceType(getInt(id, CL.CL_DEVICE_TYPE));
     }
 
     public String getName() {
-        return getString(id, OpenCL.CL_DEVICE_NAME);
+        return getString(id, CL.CL_DEVICE_NAME);
     }
 
     public int getMaxComputeUnits() {
-        return getInt(id, OpenCL.CL_DEVICE_MAX_COMPUTE_UNITS);
+        return getInt(id, CL.CL_DEVICE_MAX_COMPUTE_UNITS);
     }
 
     public long[] getMaxWorkItemSizes() {
-        return getLongs(id, OpenCL.CL_DEVICE_MAX_WORK_ITEM_SIZES, 3);
+        return getLongs(id, CL.CL_DEVICE_MAX_WORK_ITEM_SIZES, 3);
     }
 
     public long getMaxWorkGroupSize() {
-        return getLong(id, OpenCL.CL_DEVICE_MAX_WORK_GROUP_SIZE);
+        return getLong(id, CL.CL_DEVICE_MAX_WORK_GROUP_SIZE);
     }
 
     public long getMaxClockFrequency() {
-        return getInt(id, OpenCL.CL_DEVICE_MAX_CLOCK_FREQUENCY);
+        return getInt(id, CL.CL_DEVICE_MAX_CLOCK_FREQUENCY);
     }
 
     public ClContext createContext() {
@@ -131,62 +124,39 @@ public class ClDevice {
         val platformId = platform.id();
         // Obtain the number of devices for the platform
         final int[] numDevicesRef = new int[1];
-        clGetDeviceIDs(platformId, CL_DEVICE_TYPE_ALL, 0, (PointerPointer<?>)null, numDevicesRef);
+        clGetDeviceIDs(platformId, CL.CL_DEVICE_TYPE_ALL, 0, null, numDevicesRef);
         final int deviceCount = numDevicesRef[0];
 
-        val deviceBuffer = new PointerPointer<_cl_device_id>(deviceCount);
-        clGetDeviceIDs(platformId, CL_DEVICE_TYPE_ALL, deviceCount, deviceBuffer, (int[])null);
+        val deviceBuffer = new cl_device_id[deviceCount];
+        clGetDeviceIDs(platformId, CL.CL_DEVICE_TYPE_ALL, deviceCount, deviceBuffer, (int[])null);
 
         val devices = new ArrayList<ClDevice>(deviceCount);
         for (int i = 0; i < deviceCount; i++) {
             devices.add(
-                    new ClDevice(null, i, new _cl_device_id(deviceBuffer.get(i))));
+                    new ClDevice(null, i, deviceBuffer[i]));
         }
-
-        Pointer.free(deviceBuffer);
 
         return Collections.unmodifiableList(devices);
     }
 
-    private static String getString(final _cl_device_id deviceId, final int paramName) {
-        val sizePointer = new SizeTPointer(1);
-        clGetDeviceInfo(deviceId, paramName, 0, null, sizePointer);
-        final int size = (int)sizePointer.get();
-        val buffer = new BytePointer(size);
-        clGetDeviceInfo(deviceId, paramName, size, buffer, null);
-        val result = new byte[size];
-        buffer.get(result);
-        return new String(result).trim();
+    private static String getString(final cl_device_id deviceId, final int paramName) {
+        return _Util.readString((a, b, c)->clGetDeviceInfo(deviceId, paramName, a, b, c)).trim();
     }
 
-    private static long getLong(final _cl_device_id deviceId, final int paramName) {
+    private static long getLong(final cl_device_id deviceId, final int paramName) {
         return getLongs(deviceId, paramName, 1)[0];
     }
 
-    private static long[] getLongs(final _cl_device_id deviceId, final int paramName, final int numValues) {
-        val sizePointer = new SizeTPointer(1);
-        clGetDeviceInfo(deviceId, paramName, 0, null, sizePointer);
-        final int size = (int)sizePointer.get();
-        val buffer = new LongPointer(size);
-        clGetDeviceInfo(deviceId, paramName, size, buffer, null);
-        val result = new long[numValues];
-        buffer.get(result, 0, numValues);
-        return result;
+    private static long[] getLongs(final cl_device_id deviceId, final int paramName, final int numValues) {
+        return _Util.readLongs((a, b, c)->clGetDeviceInfo(deviceId, paramName, a, b, c));
     }
 
-    private static int getInt(final _cl_device_id deviceId, final int paramName) {
+    private static int getInt(final cl_device_id deviceId, final int paramName) {
         return getInts(deviceId, paramName, 1)[0];
     }
 
-    private static int[] getInts(final _cl_device_id deviceId, final int paramName, final int numValues) {
-        val sizePointer = new SizeTPointer(1);
-        clGetDeviceInfo(deviceId, paramName, 0, null, sizePointer);
-        final int size = (int)sizePointer.get();
-        val buffer = new IntPointer(size);
-        clGetDeviceInfo(deviceId, paramName, size, buffer, null);
-        val result = new int[numValues];
-        buffer.get(result, 0, numValues);
-        return result;
+    private static int[] getInts(final cl_device_id deviceId, final int paramName, final int numValues) {
+        return _Util.readInts((a, b, c)->clGetDeviceInfo(deviceId, paramName, a, b, c));
     }
 
 }

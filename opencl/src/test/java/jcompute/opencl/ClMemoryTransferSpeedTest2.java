@@ -77,7 +77,7 @@ class ClMemoryTransferSpeedTest2 {
 
                 // Create Command Queue
                 val queue = cl.createQueue();
-                System.err.printf("  + queue created (address=%d)%n", queue.id().address());
+                System.err.printf("  + queue created (address=%d)%n", queue.id().getNativePointer());
 
                 // Create Kernel program from the read in source
 //                val program = cl.createProgram(INC_SRC);

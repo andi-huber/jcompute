@@ -22,16 +22,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.IntPointer;
-import org.bytedeco.javacpp.Pointer;
-import org.bytedeco.javacpp.PointerPointer;
-import org.bytedeco.javacpp.SizeTPointer;
-import org.bytedeco.opencl._cl_platform_id;
-import org.bytedeco.opencl.global.OpenCL;
+import org.jocl.CL;
+import org.jocl.cl_platform_id;
 
-import static org.bytedeco.opencl.global.OpenCL.clGetPlatformIDs;
-import static org.bytedeco.opencl.global.OpenCL.clGetPlatformInfo;
+import static org.jocl.CL.clGetPlatformIDs;
+import static org.jocl.CL.clGetPlatformInfo;
 
 import lombok.Getter;
 import lombok.val;
@@ -44,55 +39,45 @@ public class ClPlatform {
      */
     public static List<ClPlatform> listPlatforms() {
 
-        val outPlatformCount = new IntPointer(1);
-
+        val outPlatformCount = new int[1];
         // count available OpenCL platforms
         _Util.assertSuccess(
-                clGetPlatformIDs(0, (PointerPointer<?>)null, outPlatformCount),
+                clGetPlatformIDs(0, null, outPlatformCount),
                 ()->"failed to call clGetPlatformIDs");
 
-        final int platformCount = outPlatformCount.get();
-        val platformBuffer = new PointerPointer<_cl_platform_id>(platformCount);
+        final int platformCount = outPlatformCount[0];
+        val platformBuffer = new cl_platform_id[platformCount];
 
         // fetch available OpenCL platforms
         _Util.assertSuccess(
-                clGetPlatformIDs(platformCount, platformBuffer, (IntPointer)null),
+                clGetPlatformIDs(platformCount, platformBuffer, null),
                 ()->"failed to call clGetPlatformIDs");
 
         val platforms = new ArrayList<ClPlatform>(platformCount);
         for (int i = 0; i < platformCount; i++) {
             platforms.add(
-                    new ClPlatform(i, new _cl_platform_id(platformBuffer.get(i))));
+                    new ClPlatform(i, platformBuffer[i]));
         }
-
-        Pointer.free(platformBuffer);
 
         return Collections.unmodifiableList(platforms);
     }
 
-    @Getter @Accessors(fluent = true) private final _cl_platform_id id;
+    @Getter @Accessors(fluent = true) private final cl_platform_id id;
     @Getter private final int index;
     @Getter private final String platformVersion;
     @Getter(lazy = true)
     private final List<ClDevice> devices = ClDevice.listDevices(this);
 
-    private ClPlatform(final int index, final _cl_platform_id platformId) {
+    private ClPlatform(final int index, final cl_platform_id platformId) {
         this.index = index;
         this.id = platformId;
-        this.platformVersion = getString(platformId, OpenCL.CL_PLATFORM_VERSION);
+        this.platformVersion = getString(platformId, CL.CL_PLATFORM_VERSION);
     }
 
     // -- HELPER
 
-    private static String getString(final _cl_platform_id platformId, final int paramName) {
-        val sizePointer = new SizeTPointer(1);
-        clGetPlatformInfo(platformId, paramName, 0, null, sizePointer);
-        final int size = (int)sizePointer.get();
-        val buffer = new BytePointer(size);
-        clGetPlatformInfo(platformId, paramName, size, buffer, null);
-        val result = new byte[size];
-        buffer.get(result);
-        return new String(result);
+    private static String getString(final cl_platform_id platformId, final int paramName) {
+        return _Util.readString((a, b, c)->clGetPlatformInfo(platformId, paramName, a, b, c));
     }
 
 }

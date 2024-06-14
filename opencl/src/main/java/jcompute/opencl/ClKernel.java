@@ -18,20 +18,10 @@
  */
 package jcompute.opencl;
 
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.DoublePointer;
-import org.bytedeco.javacpp.FloatPointer;
-import org.bytedeco.javacpp.IntPointer;
-import org.bytedeco.javacpp.Loader;
-import org.bytedeco.javacpp.LongPointer;
-import org.bytedeco.javacpp.Pointer;
-import org.bytedeco.javacpp.PointerPointer;
-import org.bytedeco.javacpp.ShortPointer;
-import org.bytedeco.opencl._cl_kernel;
-import org.bytedeco.opencl.global.OpenCL;
-
-import static org.bytedeco.opencl.global.OpenCL.clCreateKernel;
-import static org.bytedeco.opencl.global.OpenCL.clSetKernelArg;
+import org.jocl.CL;
+import org.jocl.Pointer;
+import org.jocl.Sizeof;
+import org.jocl.cl_kernel;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +31,7 @@ import lombok.experimental.Accessors;
 @RequiredArgsConstructor
 public class ClKernel implements ClResource {
 
-    @Getter @Accessors(fluent = true) private final _cl_kernel id;
+    @Getter @Accessors(fluent = true) private final cl_kernel id;
     @Getter private final ClProgram program;
     @Getter private final String name;
 
@@ -49,50 +39,36 @@ public class ClKernel implements ClResource {
      * Add OpenCL kernel argument.
      */
     public ClKernel setArg(final int argIndex, final ClMem memObj) {
-        try(val pointer = new PointerPointer<>(1)){
-            return setArg(this, argIndex, pointer.put(memObj.id()));
-        }
+        return setArg(this, argIndex, Sizeof.cl_mem, Pointer.to(memObj.id()));
     }
 
     public ClKernel setArg(final int argIndex, final byte value) {
-        try(val pointer = new BytePointer(1)){
-            return setArg(this, argIndex, pointer.put(value));
-        }
+        return setArg(this, argIndex, 1, Pointer.to(new byte[]{ value }));
     }
 
     public ClKernel setArg(final int argIndex, final short value) {
-        try(val pointer = new ShortPointer(1)){
-            return setArg(this, argIndex, pointer.put(value));
-        }
+        return setArg(this, argIndex, Sizeof.cl_short, Pointer.to(new short[]{ value }));
     }
 
     public ClKernel setArg(final int argIndex, final int value) {
-        try(val pointer = new IntPointer(1)){
-            return setArg(this, argIndex, pointer.put(value));
-        }
+        return setArg(this, argIndex, Sizeof.cl_int, Pointer.to(new int[]{ value }));
     }
 
     public ClKernel setArg(final int argIndex, final long value) {
-        try(val pointer = new LongPointer(1)){
-            return setArg(this, argIndex, pointer.put(value));
-        }
+        return setArg(this, argIndex, Sizeof.cl_long, Pointer.to(new long[]{ value }));
     }
 
     public ClKernel setArg(final int argIndex, final float value) {
-        try(val pointer = new FloatPointer(1)){
-            return setArg(this, argIndex, pointer.put(value));
-        }
+        return setArg(this, argIndex, Sizeof.cl_float, Pointer.to(new float[]{ value }));
     }
 
     public ClKernel setArg(final int argIndex, final double value) {
-        try(val pointer = new DoublePointer(1)){
-            return setArg(this, argIndex, pointer.put(value));
-        }
+        return setArg(this, argIndex, Sizeof.cl_double, Pointer.to(new double[]{ value }));
     }
 
     @Override
     public void free() {
-        final int ret = OpenCL.clReleaseKernel(id());
+        final int ret = CL.clReleaseKernel(id());
         _Util.assertSuccess(ret, ()->
             String.format("failed to release kernel '%s' for program %s", name, program));
     }
@@ -129,20 +105,17 @@ public class ClKernel implements ClResource {
      * Returns a new OpenCL kernel for given program.
      */
     static ClKernel createKernel(final ClProgram program, final String kernelName) {
-        val ret_pointer = new IntPointer(1);
-        val kernelId = clCreateKernel(program.id(), kernelName, ret_pointer);
-        val ret = ret_pointer.get();
+        val ret_pointer = new int[1];
+        val kernelId = CL.clCreateKernel(program.id(), kernelName, ret_pointer);
+        int ret = ret_pointer[0];
         _Util.assertSuccess(ret, ()->
                 String.format("failed to create kernel '%s' for program %s", kernelName, program));
         return new ClKernel(kernelId, program, kernelName);
     }
 
     /* Set OpenCL kernel argument */
-    private ClKernel setArg(final ClKernel kernel, final int argIndex, final Pointer pointer) {
-        val ret = clSetKernelArg(kernel.id(),
-                argIndex,
-                Loader.sizeof(pointer.getClass()),
-                pointer);
+    private ClKernel setArg(final ClKernel kernel, final int argIndex, final long sizeOf, final Pointer pointer) {
+        int ret = CL.clSetKernelArg(kernel.id(), argIndex, sizeOf, pointer);
         _Util.assertSuccess(ret, ()->
             String.format("failed to set kernel argument for kernel %s", kernel.getName()));
         return kernel;

@@ -23,15 +23,33 @@ import java.lang.foreign.MemorySegment;
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacpp.LongPointer;
+import org.jocl.Pointer;
+
+import lombok.experimental.UtilityClass;
 
 import jcompute.core.mem.ByteArray;
 import jcompute.core.mem.DoubleArray;
 import jcompute.core.mem.LongArray;
 import jcompute.core.util.primitive.LongUtils;
-import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class PointerUtils {
+
+    // -- JOCL
+
+    public org.jocl.Pointer pointerJocl(final ByteArray array) {
+        return Pointer.to(array.memorySegment().asByteBuffer());
+    }
+
+    public org.jocl.Pointer pointerJocl(final LongArray array) {
+        return Pointer.to(array.memorySegment().asByteBuffer().asLongBuffer());
+    }
+
+    public org.jocl.Pointer pointerJocl(final DoubleArray array) {
+        return Pointer.to(array.memorySegment().asByteBuffer());
+    }
+
+    // -- BYTEDECO
 
     public BytePointer pointer(final ByteArray array) {
         return new BytePointer(array.memorySegment().asByteBuffer());

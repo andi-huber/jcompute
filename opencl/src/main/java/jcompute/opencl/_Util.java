@@ -23,7 +23,8 @@ import java.nio.charset.Charset;
 import java.util.Scanner;
 import java.util.function.Supplier;
 
-import org.bytedeco.opencl.global.OpenCL;
+import org.jocl.CL;
+import org.jocl.Pointer;
 
 import lombok.NonNull;
 import lombok.val;
@@ -36,7 +37,7 @@ class _Util {
     public final static Object[] EMPTY_OBJECTS = new Object[0];
 
     public void assertSuccess(final int ret, final Supplier<String> message) {
-        if(ret!=OpenCL.CL_SUCCESS) {
+        if(ret!=CL.CL_SUCCESS) {
             System.err.printf("%s%n", message.get());
             throw new IllegalStateException(message.get());
         }
@@ -77,6 +78,70 @@ class _Util {
         try(Scanner scanner = new Scanner(input, charset.name())){
             scanner.useDelimiter("\\A");
             return scanner.hasNext() ? scanner.next() : "";
+        }
+    }
+
+
+    // -- DYNAMIC READ
+
+    public String readString(final DynamicRead function) {
+        return new DynamicByteReadReader()
+                .read(function).asString();
+    }
+    public byte[] readBytes(final DynamicRead function) {
+        return new DynamicByteReadReader()
+                .read(function).data;
+    }
+    public int[] readInts(final DynamicRead function) {
+        return new DynamicIntReader()
+                .read(function).data;
+    }
+    public long[] readLongs(final DynamicRead function) {
+        return new DynamicLongReader()
+                .read(function).data;
+    }
+
+    static interface DynamicRead {
+        void accept(long size, Pointer data, long sizeReturn[]);
+    }
+
+    private static class DynamicByteReadReader {
+        private final long[] sizePointer = new long[1];
+        private byte[] data = null;
+        private int size = 0;
+        DynamicByteReadReader read(final DynamicRead function) {
+            function.accept(0, null, sizePointer);
+            this.size = (int)sizePointer[0];
+            this.data = new byte[size];
+            function.accept(size, Pointer.to(data), null);
+            return this;
+        }
+        String asString() {
+            return new String(data, 0, data.length - 1);
+        }
+    }
+    private static class DynamicIntReader {
+        private final long[] sizePointer = new long[1];
+        private int[] data = null;
+        private int size = 0;
+        DynamicIntReader read(final DynamicRead function) {
+            function.accept(0, null, sizePointer);
+            this.size = (int)sizePointer[0];
+            this.data = new int[size];
+            function.accept(size, Pointer.to(data), null);
+            return this;
+        }
+    }
+    private static class DynamicLongReader {
+        private final long[] sizePointer = new long[1];
+        private long[] data = null;
+        private int size = 0;
+        DynamicLongReader read(final DynamicRead function) {
+            function.accept(0, null, sizePointer);
+            this.size = (int)sizePointer[0];
+            this.data = new long[size];
+            function.accept(size, Pointer.to(data), null);
+            return this;
         }
     }
 

@@ -18,17 +18,9 @@
  */
 package jcompute.opencl;
 
-import org.bytedeco.javacpp.PointerPointer;
-import org.bytedeco.javacpp.SizeTPointer;
-import org.bytedeco.opencl._cl_command_queue;
-import org.bytedeco.opencl.global.OpenCL;
-
-import static org.bytedeco.opencl.global.OpenCL.CL_TRUE;
-import static org.bytedeco.opencl.global.OpenCL.clEnqueueNDRangeKernel;
-import static org.bytedeco.opencl.global.OpenCL.clEnqueueReadBuffer;
-import static org.bytedeco.opencl.global.OpenCL.clEnqueueWriteBuffer;
-import static org.bytedeco.opencl.global.OpenCL.clFinish;
-import static org.bytedeco.opencl.global.OpenCL.clFlush;
+import org.jocl.CL;
+import org.jocl.cl_command_queue;
+import org.jocl.cl_queue_properties;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +32,7 @@ import jcompute.core.shape.Shape;
 @RequiredArgsConstructor
 public class ClCommandQueue implements ClResource {
 
-    @Getter @Accessors(fluent = true) private final _cl_command_queue id;
+    @Getter @Accessors(fluent = true) private final cl_command_queue id;
     @Getter private final ClContext context;
 
     public ClCommandQueue enqueueWriteBuffer(final ClMem memObj) {
@@ -56,12 +48,12 @@ public class ClCommandQueue implements ClResource {
             final Shape globalSize,
             final Shape localSize) {
         return enqueueNDRangeKernel(this, kernel, globalSize.dimensionCount(),
-                new SizeTPointer(globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()),
-                new SizeTPointer(localSize.sizeX(), localSize.sizeY(), localSize.sizeZ()));
+                new long[] {globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()},
+                new long[] {localSize.sizeX(), localSize.sizeY(), localSize.sizeZ()});
     }
 
     public ClCommandQueue flush() {
-        final int ret = clFlush(id());
+        final int ret = CL.clFlush(id());
         _Util.assertSuccess(
                 ret, ()->
                     String.format("failed to flush command queue for context %s", context));
@@ -69,7 +61,7 @@ public class ClCommandQueue implements ClResource {
     }
 
     public ClCommandQueue finish() {
-        final int ret = clFinish(id());
+        final int ret = CL.clFinish(id());
         _Util.assertSuccess(
                 ret, ()->
                     String.format("failed to finish command queue for context %s", context));
@@ -83,7 +75,7 @@ public class ClCommandQueue implements ClResource {
             final ClKernel kernel,
             final Shape globalSize) {
         return enqueueNDRangeKernel(this, kernel, globalSize.dimensionCount(),
-                new SizeTPointer(globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()),
+                new long[] {globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()},
                 null);
     }
 
@@ -92,7 +84,7 @@ public class ClCommandQueue implements ClResource {
         flush();
         finish();
 
-        int ret = OpenCL.clReleaseCommandQueue(id());
+        int ret = CL.clReleaseCommandQueue(id());
         _Util.assertSuccess(
                 ret, ()->
                     String.format("failed to release command queue for context %s", context));
@@ -106,14 +98,11 @@ public class ClCommandQueue implements ClResource {
      */
     static ClCommandQueue createQueue(final ClContext context) {
         val deviceId = context.getSingleDeviceElseFail().id();
-        val properties = new long[] {
-//                OpenCL.CL_QUEUE_PROPERTIES,
-//                | OpenCL.CL_QUEUE_ON_DEVICE
-//                | OpenCL.CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE,
-                0}; // zero terminated list of queue creation properties
+        // zero terminated list of queue creation properties
         // https://registry.khronos.org/OpenCL/sdk/3.0/docs/man/html/clCreateCommandQueueWithProperties.html
-        val ret_pointer = new int[1];
-        val queueId = OpenCL.clCreateCommandQueueWithProperties(context.id(), deviceId, properties, ret_pointer);
+        cl_queue_properties properties = new cl_queue_properties();
+        int[] ret_pointer = new int[0];
+        val queueId = CL.clCreateCommandQueueWithProperties(context.id(), deviceId, properties, ret_pointer );
         val ret = ret_pointer[0];
         _Util.assertSuccess(ret, ()->
                 String.format("failed to create command-queue for context %s", context));
@@ -122,13 +111,13 @@ public class ClCommandQueue implements ClResource {
 
     /* Transfer data to memory buffer */
     static ClCommandQueue enqueueWriteBuffer(final ClCommandQueue queue, final ClMem memObj) {
-        val ret = clEnqueueWriteBuffer(queue.id(), memObj.id(),
-                CL_TRUE,
+        int ret = CL.clEnqueueWriteBuffer(queue.id(), memObj.id(),
+                true, // blocking write
                 0,
                 memObj.size() * memObj.sizeOf(),
                 memObj.getPointer(),
                 0,
-                (PointerPointer<?>)null, null);
+                null, null);
         _Util.assertSuccess(ret, ()->
             String.format("failed to enqueue WriteBuffer for context %s", queue.getContext()));
         return queue;
@@ -136,13 +125,13 @@ public class ClCommandQueue implements ClResource {
 
     /* Transfer result from the memory buffer */
     static ClCommandQueue enqueueReadBuffer(final ClCommandQueue queue, final ClMem memObj) {
-        val ret = clEnqueueReadBuffer(queue.id(), memObj.id(),
-                CL_TRUE,
+        int ret = CL.clEnqueueReadBuffer(queue.id(), memObj.id(),
+                true, // blocking read
                 0,
                 memObj.size() * memObj.sizeOf(),
                 memObj.getPointer(),
                 0,
-                (PointerPointer<?>)null, null);
+                null, null);
         _Util.assertSuccess(ret, ()->
             String.format("failed to enqueue ReadBuffer for context %s", queue.getContext()));
         return queue;
@@ -161,11 +150,12 @@ public class ClCommandQueue implements ClResource {
             final ClCommandQueue queue,
             final ClKernel kernel,
             final int work_dim,
-            final SizeTPointer global_work_size,
-            final SizeTPointer local_work_size) {
-        val ret = clEnqueueNDRangeKernel(queue.id, kernel.id(), work_dim, null,
+            final long[] global_work_size,
+            final long[] local_work_size) {
+
+        int ret = CL.clEnqueueNDRangeKernel(queue.id, kernel.id(), work_dim, null,
                 global_work_size, local_work_size, 0,
-                (PointerPointer<?>)null, null);
+                null, null);
         _Util.assertSuccess(ret, ()->
             String.format("failed to enqueue Kernel for context %s", queue.getContext()));
         return queue;

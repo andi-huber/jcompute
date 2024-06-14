@@ -67,6 +67,11 @@ public record DoubleArray(
         return this;
     }
 
+    @Override
+    public int bytesPerElement() {
+        return 8;
+    }
+
     // -- CONTRACT
 
     @Override

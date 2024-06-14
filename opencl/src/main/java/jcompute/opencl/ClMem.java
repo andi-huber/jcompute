@@ -18,28 +18,25 @@
  */
 package jcompute.opencl;
 
-import org.bytedeco.javacpp.IntPointer;
-import org.bytedeco.javacpp.Loader;
-import org.bytedeco.javacpp.Pointer;
-import org.bytedeco.opencl._cl_mem;
-import org.bytedeco.opencl.global.OpenCL;
+import org.jocl.CL;
+import org.jocl.Pointer;
+import org.jocl.cl_mem;
 
-import static org.bytedeco.opencl.global.OpenCL.clCreateBuffer;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.experimental.Accessors;
 
 import jcompute.core.mem.ByteArray;
 import jcompute.core.mem.DoubleArray;
 import jcompute.core.mem.JComputeArray;
 import jcompute.core.mem.LongArray;
 import jcompute.opencl.util.PointerUtils;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.experimental.Accessors;
 
 @RequiredArgsConstructor
 public class ClMem implements ClResource {
 
-    @Getter @Accessors(fluent = true) private final _cl_mem id;
+    @Getter @Accessors(fluent = true) private final cl_mem id;
     @Getter private final ClContext context;
     /**
      * The number of elements contained in the underlying array.
@@ -53,7 +50,7 @@ public class ClMem implements ClResource {
 
     @Override
     public void free() {
-        final int ret = OpenCL.clReleaseMemObject(id());
+        final int ret = CL.clReleaseMemObject(id());
         _Util.assertSuccess(ret, ()->
             String.format("failed to release memory object for context %s", context));
     }
@@ -63,28 +60,24 @@ public class ClMem implements ClResource {
     /**
      * Returns a new memory object for given context.
      */
-    static ClMem createMemory(final ClContext context, final JComputeArray jcomputeArray, final int options) {
-        return switch (jcomputeArray) {
-        case ByteArray array -> createMemory(context, PointerUtils.pointer(array), options);
-        case LongArray array -> createMemory(context, PointerUtils.pointer(array), options);
-        case DoubleArray array -> createMemory(context, PointerUtils.pointer(array), options);
-        default -> throw new IllegalArgumentException("Unexpected value: " + jcomputeArray.getClass());
-        };
-    }
+    static ClMem createMemory(final ClContext context, final JComputeArray jcomputeArray, final long options) {
+        long size = jcomputeArray.shape().totalSize();
+        int sizeOf = jcomputeArray.bytesPerElement();
 
-    /**
-     * Returns a new memory object for given context.
-     */
-    static ClMem createMemory(final ClContext context, final Pointer pointer, final int options) {
-        final long size = pointer.capacity();
-        final int sizeOf = Loader.sizeof(pointer.getClass());
-
-        val ret_pointer = new IntPointer(1);
-        val memId = clCreateBuffer(context.id(), options,
+        val ret_pointer = new int[1];
+        val memId = CL.clCreateBuffer(context.id(), options,
                 size * sizeOf, null, ret_pointer);
-        val ret = ret_pointer.get();
+        val ret = ret_pointer[0];
         _Util.assertSuccess(ret, ()->
                 String.format("failed to create memory object for context %s", context));
+
+        final Pointer pointer = switch (jcomputeArray) {
+            case ByteArray array -> PointerUtils.pointerJocl(array);
+            case LongArray array -> PointerUtils.pointerJocl(array);
+            case DoubleArray array -> PointerUtils.pointerJocl(array);
+            default -> throw new IllegalArgumentException("Unexpected value: " + jcomputeArray.getClass());
+        };
+
         return new ClMem(memId, context, size, sizeOf, pointer);
     }
 

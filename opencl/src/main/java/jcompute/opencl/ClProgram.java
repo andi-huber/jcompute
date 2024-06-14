@@ -21,16 +21,9 @@ package jcompute.opencl;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.IntPointer;
-import org.bytedeco.javacpp.PointerPointer;
-import org.bytedeco.javacpp.SizeTPointer;
-import org.bytedeco.opencl._cl_program;
-import org.bytedeco.opencl.global.OpenCL;
-
-import static org.bytedeco.opencl.global.OpenCL.clBuildProgram;
-import static org.bytedeco.opencl.global.OpenCL.clCreateProgramWithSource;
-import static org.bytedeco.opencl.global.OpenCL.clGetProgramBuildInfo;
+import org.jocl.CL;
+import org.jocl.cl_device_id;
+import org.jocl.cl_program;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +33,7 @@ import lombok.experimental.Accessors;
 @RequiredArgsConstructor
 public class ClProgram implements ClResource {
 
-    @Getter @Accessors(fluent = true) private final _cl_program id;
+    @Getter @Accessors(fluent = true) private final cl_program id;
     @Getter private final ClContext context;
     @Getter private final List<ClResource> childResources;
 
@@ -54,10 +47,8 @@ public class ClProgram implements ClResource {
 
     @Override
     public void free() {
-
         childResources.forEach(ClResource::free);
-
-        final int ret = OpenCL.clReleaseProgram(id());
+        final int ret = CL.clReleaseProgram(id());
         _Util.assertSuccess(ret, ()->
             String.format("failed to release program context %s", context));
     }
@@ -71,16 +62,14 @@ public class ClProgram implements ClResource {
 
     /* Create Kernel program from the read in source */
     static ClProgram createProgram(final ClContext context, final String source_str) {
-        try(val sizeTPtr = new SizeTPointer(1)){
-            val ret_pointer = new IntPointer(1);
-            val programId = clCreateProgramWithSource(context.id(), 1,
-                    new PointerPointer<>(source_str), sizeTPtr.put(source_str.length()), ret_pointer);
-            val ret = ret_pointer.get();
-            _Util.assertSuccess(ret, ()->
-                    String.format("failed to create program for context %s",
-                            context));
-            return new ClProgram(programId, context, new LinkedList<ClResource>());
-        }
+        var ret_pointer = new int[1];
+        val programId = CL.clCreateProgramWithSource(context.id(), 1,
+                new String[]{source_str}, null, ret_pointer);
+        int ret = ret_pointer[0];
+        _Util.assertSuccess(ret, ()->
+            String.format("failed to create program for context %s",
+                    context));
+        return new ClProgram(programId, context, new LinkedList<ClResource>());
     }
 
     /**
@@ -90,13 +79,13 @@ public class ClProgram implements ClResource {
         val deviceId = program.getContext().getSingleDeviceElseFail().id();
 
         /* Build Kernel Program */
-        val ret = clBuildProgram(program.id(), 1, deviceId, null, null, null);
+        int ret = CL.clBuildProgram(program.id(), 1, new cl_device_id[] {deviceId}, "-cl-mad-enable", null, null);
         _Util.assertSuccess(ret, ()->
-        String.format("failed to build program %s%n"
-                + "build-log: %s",
-                program,
-                getBuildProgramInfo(program, OpenCL.CL_PROGRAM_BUILD_LOG)
-                ));
+            String.format("failed to build program %s%n"
+                    + "build-log: %s",
+                    program,
+                    getBuildProgramInfo(program, CL.CL_PROGRAM_BUILD_LOG)
+                    ));
 
         return program;
     }
@@ -105,16 +94,7 @@ public class ClProgram implements ClResource {
     //OpenCL.CL_PROGRAM_BUILD_LOG
     static String getBuildProgramInfo(final ClProgram program, final int paramName) {
         val deviceId = program.getContext().getSingleDeviceElseFail().id();
-        val sizePointer = new SizeTPointer(1);
-        clGetProgramBuildInfo(program.id(), deviceId, paramName, 0, null, sizePointer);
-        final int size = (int)sizePointer.get();
-        val buffer = new BytePointer(size);
-        val ret = clGetProgramBuildInfo(program.id(), deviceId, paramName, size, buffer, null);
-        _Util.assertSuccess(ret, ()->
-            String.format("failed to getBuildProgramInfo %s", program));
-        val result = new byte[size];
-        buffer.get(result);
-        return new String(result);
+        return _Util.readString((a, b, c)->CL.clGetProgramBuildInfo(program.id(), deviceId, paramName, a, b, c));
     }
 
     private <T extends ClResource> T add(final T resource) {
