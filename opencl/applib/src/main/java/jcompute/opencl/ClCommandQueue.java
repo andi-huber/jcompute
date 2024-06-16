@@ -18,12 +18,13 @@
  */
 package jcompute.opencl;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import jcompute.core.shape.Shape;
 
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class ClCommandQueue implements ClResource {
 
     @Getter private final ClContext context;

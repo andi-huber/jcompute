@@ -18,12 +18,13 @@
  */
 package jcompute.opencl;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.experimental.Accessors;
 
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class ClKernel implements ClResource {
 
     @Getter @Accessors(fluent = true) private final ClProgram program;

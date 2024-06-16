@@ -21,9 +21,12 @@ package jcompute.opencl;
 import java.util.Comparator;
 import java.util.stream.Stream;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class ClDevice {
 
     public enum DeviceType {
@@ -53,13 +56,6 @@ public abstract class ClDevice {
 
     @Getter private final ClPlatform platform;
     @Getter private final int index;
-
-    protected ClDevice(
-            final ClPlatform platform,
-            final int index) {
-        this.platform = platform;
-        this.index = index;
-    }
 
     public abstract DeviceType getType();
     public abstract String getName();

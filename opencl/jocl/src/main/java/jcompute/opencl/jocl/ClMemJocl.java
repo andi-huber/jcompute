@@ -21,23 +21,24 @@ package jcompute.opencl.jocl;
 import org.jocl.CL;
 import org.jocl.cl_mem;
 
+import lombok.Getter;
 import lombok.val;
+import lombok.experimental.Accessors;
 
 import jcompute.core.mem.JComputeArray;
 import jcompute.opencl.ClContext;
 import jcompute.opencl.ClMem;
 
-public record ClMemJocl(
-        cl_mem id,
-        ClContext context,
-        JComputeArray computeArray
-        ) implements ClMem {
+public final class ClMemJocl extends ClMem {
 
-    @Override
-    public void free() {
-        final int ret = CL.clReleaseMemObject(id());
-        _Util.assertSuccess(ret, ()->
-            String.format("failed to release memory object for context %s", context));
+    @Getter @Accessors(fluent = true) private final cl_mem id;
+
+    protected ClMemJocl(
+            final cl_mem id,
+            final ClContext context,
+            final JComputeArray computeArray) {
+        super(context, computeArray);
+        this.id = id;
     }
 
     // -- HELPER
@@ -57,6 +58,11 @@ public record ClMemJocl(
                 String.format("failed to create memory object (size=%d*%d) for context %s", sizeOf, size, context));
 
         return new ClMemJocl(memId, context, computeArray);
+    }
+
+    @Override
+    protected int releaseMemObject() {
+        return CL.clReleaseMemObject(id());
     }
 
 }

@@ -18,27 +18,39 @@
  */
 package jcompute.opencl;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
+
 import jcompute.core.mem.JComputeArray;
 
-public interface ClMem extends ClResource {
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
+public abstract class ClMem implements ClResource {
 
-    ClContext context();
-    JComputeArray computeArray();
+    @Getter @Accessors(fluent = true) final ClContext context;
+    @Getter @Accessors(fluent = true) final JComputeArray computeArray;
 
     /**
      * The number of elements contained in the underlying array.
      */
-    default long size() {
+    public final long size() {
         return computeArray().shape().totalSize();
     }
 
     /**
      * The number bytes (required) for each element in the underlying array.
      */
-    default int sizeOf() {
+    public final int sizeOf() {
         return computeArray().bytesPerElement();
     }
 
+    protected abstract int releaseMemObject();
 
+    @Override
+    public final void free() {
+        _Util.assertSuccess(releaseMemObject(), ()->
+            String.format("failed to release memory object for context %s", context));
+    }
 
 }

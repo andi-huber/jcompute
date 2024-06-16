@@ -20,10 +20,11 @@ package jcompute.opencl;
 
 import java.util.List;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class ClProgram implements ClResource {
 
     @Getter private final ClContext context;
