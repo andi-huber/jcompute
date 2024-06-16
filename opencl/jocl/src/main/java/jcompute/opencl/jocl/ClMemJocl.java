@@ -22,7 +22,6 @@ import org.jocl.CL;
 import org.jocl.cl_mem;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.core.mem.JComputeArray;
@@ -33,31 +32,12 @@ public final class ClMemJocl extends ClMem {
 
     @Getter @Accessors(fluent = true) private final cl_mem id;
 
-    protected ClMemJocl(
+    ClMemJocl(
             final cl_mem id,
             final ClContext context,
             final JComputeArray computeArray) {
         super(context, computeArray);
         this.id = id;
-    }
-
-    // -- HELPER
-
-    /**
-     * Returns a new memory object for given context.
-     */
-    static ClMem createMemory(final ClContextJocl context, final JComputeArray computeArray, final long options) {
-        long size = computeArray.shape().totalSize();
-        int sizeOf = computeArray.bytesPerElement();
-
-        val ret_pointer = new int[1];
-        val memId = CL.clCreateBuffer(context.id(), options,
-                size * sizeOf, null, ret_pointer);
-        val ret = ret_pointer[0];
-        _Util.assertSuccess(ret, ()->
-                String.format("failed to create memory object (size=%d*%d) for context %s", sizeOf, size, context));
-
-        return new ClMemJocl(memId, context, computeArray);
     }
 
     @Override

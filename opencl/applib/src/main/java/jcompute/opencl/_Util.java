@@ -30,22 +30,22 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class _Util {
 
-    public void assertSuccess(final int ret, final Supplier<String> message) {
+    void assertSuccess(final int ret, final Supplier<String> message) {
         if(ret!=0) {
             System.err.printf("%s%n", message.get());
             throw new IllegalStateException(message.get());
         }
     }
 
-    public final static Class<?>[] EMPTY_CLASSES = new Class<?>[0];
-    public final static Object[] EMPTY_OBJECTS = new Object[0];
+    final Class<?>[] EMPTY_CLASSES = new Class<?>[0];
+    final Object[] EMPTY_OBJECTS = new Object[0];
 
-    public boolean isEmpty(final String s) {
+    boolean isEmpty(final String s) {
         return s==null
                 || s.length()==0;
     }
 
-    public boolean isNotEmpty(final String s) {
+    boolean isNotEmpty(final String s) {
         return s!=null
                 && s.length()>0;
     }
@@ -67,7 +67,7 @@ class _Util {
         return new ClPreferredDeviceComparatorDefault();
     }
 
-    public String read(final InputStream input, final @NonNull Charset charset) {
+    String read(final InputStream input, final @NonNull Charset charset) {
         if(input==null) {
             return "";
         }
@@ -77,6 +77,5 @@ class _Util {
             return scanner.hasNext() ? scanner.next() : "";
         }
     }
-
 
 }

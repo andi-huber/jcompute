@@ -18,22 +18,15 @@
  */
 package jcompute.opencl.jocl;
 
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.util.Scanner;
 import java.util.function.Supplier;
 
 import org.jocl.CL;
 import org.jocl.Pointer;
 
-import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 class _Util {
-
-    public final static Class<?>[] EMPTY_CLASSES = new Class<?>[0];
-    public final static Object[] EMPTY_OBJECTS = new Object[0];
 
     public void assertSuccess(final int ret, final Supplier<String> message) {
         if(ret!=CL.CL_SUCCESS) {
@@ -41,28 +34,6 @@ class _Util {
             throw new IllegalStateException(message.get());
         }
     }
-
-    public boolean isEmpty(final String s) {
-        return s==null
-                || s.length()==0;
-    }
-
-    public boolean isNotEmpty(final String s) {
-        return s!=null
-                && s.length()>0;
-    }
-
-    public String read(final InputStream input, final @NonNull Charset charset) {
-        if(input==null) {
-            return "";
-        }
-        // see https://stackoverflow.com/questions/309424/how-to-read-convert-an-inputstream-into-a-string-in-java
-        try(Scanner scanner = new Scanner(input, charset.name())){
-            scanner.useDelimiter("\\A");
-            return scanner.hasNext() ? scanner.next() : "";
-        }
-    }
-
 
     // -- DYNAMIC READ
 

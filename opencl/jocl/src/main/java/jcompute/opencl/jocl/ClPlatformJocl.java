@@ -18,60 +18,28 @@
  */
 package jcompute.opencl.jocl;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.jocl.CL;
 import org.jocl.cl_platform_id;
 
-import static org.jocl.CL.clGetPlatformIDs;
 import static org.jocl.CL.clGetPlatformInfo;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.opencl.ClDevice;
 import jcompute.opencl.ClPlatform;
 
-public class ClPlatformJocl implements ClPlatform {
-
-    /**
-     * Lists all available OpenCL implementations.
-     */
-    public static List<ClPlatform> listPlatforms() {
-
-        val outPlatformCount = new int[1];
-        // count available OpenCL platforms
-        _Util.assertSuccess(
-                clGetPlatformIDs(0, null, outPlatformCount),
-                ()->"failed to call clGetPlatformIDs");
-
-        final int platformCount = outPlatformCount[0];
-        val platformBuffer = new cl_platform_id[platformCount];
-
-        // fetch available OpenCL platforms
-        _Util.assertSuccess(
-                clGetPlatformIDs(platformCount, platformBuffer, null),
-                ()->"failed to call clGetPlatformIDs");
-
-        val platforms = new ArrayList<ClPlatformJocl>(platformCount);
-        for (int i = 0; i < platformCount; i++) {
-            platforms.add(
-                    new ClPlatformJocl(i, platformBuffer[i]));
-        }
-
-        return Collections.unmodifiableList(platforms);
-    }
+public final class ClPlatformJocl implements ClPlatform {
 
     @Getter @Accessors(fluent = true) private final cl_platform_id id;
     @Getter private final int index;
     @Getter private final String platformVersion;
     @Getter(lazy = true)
-    private final List<ClDevice> devices = ClDeviceJocl.listDevices(this);
+    private final List<ClDevice> devices = _Jocl.listDevices(this);
 
-    private ClPlatformJocl(final int index, final cl_platform_id platformId) {
+    ClPlatformJocl(final int index, final cl_platform_id platformId) {
         this.index = index;
         this.id = platformId;
         this.platformVersion = getString(platformId, CL.CL_PLATFORM_VERSION);

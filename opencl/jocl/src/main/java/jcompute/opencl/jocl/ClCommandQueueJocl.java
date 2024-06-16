@@ -20,10 +20,8 @@ package jcompute.opencl.jocl;
 
 import org.jocl.CL;
 import org.jocl.cl_command_queue;
-import org.jocl.cl_queue_properties;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.core.shape.Shape;
@@ -36,7 +34,7 @@ public final class ClCommandQueueJocl extends ClCommandQueue {
 
     @Getter @Accessors(fluent = true) private final cl_command_queue id;
 
-    public ClCommandQueueJocl(final cl_command_queue id, final ClContext context) {
+    ClCommandQueueJocl(final cl_command_queue id, final ClContext context) {
         super(context);
         this.id = id;
     }
@@ -52,6 +50,26 @@ public final class ClCommandQueueJocl extends ClCommandQueue {
     @Override
     protected int releaseQueue() {
         return CL.clReleaseCommandQueue(id());
+    }
+    @Override
+    protected int enqueueWriteBuffer(final ClMem memObj, final boolean blocking) {
+        return CL.clEnqueueWriteBuffer(id(), ((ClMemJocl)memObj).id(),
+                blocking,
+                0,
+                memObj.size() * memObj.sizeOf(),
+                _Jocl.pointerOf(memObj.computeArray()),
+                0,
+                null, null);
+    }
+    @Override
+    protected int enqueueReadBuffer(final ClMem memObj, final boolean blocking) {
+        return CL.clEnqueueReadBuffer(id(), ((ClMemJocl)memObj).id(),
+                blocking,
+                0,
+                memObj.size() * memObj.sizeOf(),
+                _Jocl.pointerOf(memObj.computeArray()),
+                0,
+                null, null);
     }
 
     @Override
@@ -72,18 +90,6 @@ public final class ClCommandQueueJocl extends ClCommandQueue {
     }
 
     @Override
-    public final ClCommandQueue enqueueWriteBuffer(
-            final ClMem memObj) {
-        return _Jocl.enqueueWriteBuffer(this, (ClMemJocl)memObj);
-    }
-
-    @Override
-    public final ClCommandQueue enqueueReadBuffer(
-            final ClMem memObj) {
-        return _Jocl.enqueueReadBuffer(this, (ClMemJocl)memObj);
-    }
-
-    @Override
     public final ClCommandQueue enqueueNDRangeKernel(
             final ClKernel kernel,
             final Shape globalSize,
@@ -93,23 +99,4 @@ public final class ClCommandQueueJocl extends ClCommandQueue {
                 new long[] {localSize.sizeX(), localSize.sizeY(), localSize.sizeZ()});
     }
 
-
-    // -- HELPER
-
-    /**
-     * Returns a new command queue for given context.
-     * @implNote yet only supports contexts bound to only a single device
-     */
-    static ClCommandQueue createQueue(final ClContextJocl context) {
-        val deviceId = ((ClDeviceJocl)context.getSingleDeviceElseFail()).id();
-        // zero terminated list of queue creation properties
-        // https://registry.khronos.org/OpenCL/sdk/3.0/docs/man/html/clCreateCommandQueueWithProperties.html
-        cl_queue_properties properties = new cl_queue_properties();
-        int[] ret_pointer = new int[1];
-        val queueId = CL.clCreateCommandQueueWithProperties(context.id(), deviceId, properties, ret_pointer );
-        val ret = ret_pointer[0];
-        _Util.assertSuccess(ret, ()->
-                String.format("failed to create command-queue for context %s", context));
-        return new ClCommandQueueJocl(queueId, context);
-    }
 }

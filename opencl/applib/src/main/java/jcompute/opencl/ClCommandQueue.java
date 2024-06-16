@@ -32,6 +32,8 @@ public abstract class ClCommandQueue implements ClResource {
     protected abstract int flushQueue();
     protected abstract int finishQueue();
     protected abstract int releaseQueue();
+    protected abstract int enqueueWriteBuffer(ClMem memObj, boolean blocking);
+    protected abstract int enqueueReadBuffer(ClMem memObj, boolean blocking);
 
     @Override
     public final void free() {
@@ -40,11 +42,17 @@ public abstract class ClCommandQueue implements ClResource {
         releaseQueue();
     }
 
-    public abstract  ClCommandQueue enqueueWriteBuffer(
-            final ClMem memObj);
+    public final ClCommandQueue enqueueWriteBuffer(final ClMem memObj) {
+        _Util.assertSuccess(enqueueWriteBuffer(memObj, true), ()->
+            String.format("failed to enqueue WriteBuffer for context %s", getContext()));
+        return this;
+    }
 
-    public abstract ClCommandQueue enqueueReadBuffer(
-            final ClMem memObj);
+    public final ClCommandQueue enqueueReadBuffer(final ClMem memObj) {
+        _Util.assertSuccess(enqueueReadBuffer(memObj, true), ()->
+            String.format("failed to enqueue ReadBuffer for context %s", getContext()));
+        return this;
+    }
 
     /**
      * localSize is auto

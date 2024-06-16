@@ -22,10 +22,8 @@ import java.util.List;
 
 import org.jocl.CL;
 import org.jocl.cl_context;
-import org.jocl.cl_device_id;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.core.mem.JComputeArray;
@@ -35,57 +33,41 @@ import jcompute.opencl.ClDevice;
 import jcompute.opencl.ClMem;
 import jcompute.opencl.ClProgram;
 
-public class ClContextJocl extends ClContext {
+public final class ClContextJocl extends ClContext {
 
     @Getter @Accessors(fluent = true) private final cl_context id;
 
-    public ClContextJocl(final cl_context id, final List<ClDevice> devices) {
+    ClContextJocl(final cl_context id, final List<ClDevice> devices) {
         super(devices);
         this.id = id;
     }
 
     @Override
     public ClCommandQueue createQueue() {
-        return add(ClCommandQueueJocl.createQueue(this));
+        return add(_Jocl.createQueue(this));
     }
 
     @Override
     public ClProgram createProgram(final String programSource) {
-        return add(ClProgramJocl.createProgram(this, programSource).build());
+        return add(_Jocl.createProgram(this, programSource).build());
     }
 
     @Override
     public ClMem createMemoryReadWrite(final JComputeArray array) {
-        return add(ClMemJocl.createMemory(this, array, CL.CL_MEM_READ_WRITE));
+        return add(_Jocl.createMemory(this, array, CL.CL_MEM_READ_WRITE));
     }
     @Override
     public ClMem createMemoryReadOnly(final JComputeArray array) {
-        return add(ClMemJocl.createMemory(this, array, CL.CL_MEM_READ_ONLY));
+        return add(_Jocl.createMemory(this, array, CL.CL_MEM_READ_ONLY));
     }
     @Override
     public ClMem createMemoryWriteOnly(final JComputeArray array) {
-        return add(ClMemJocl.createMemory(this, array, CL.CL_MEM_WRITE_ONLY));
+        return add(_Jocl.createMemory(this, array, CL.CL_MEM_WRITE_ONLY));
     }
 
     @Override
     protected int releaseContext() {
         return CL.clReleaseContext(id());
-    }
-
-    // -- UTILITY
-
-    /**
-     * Returns a context bound to a single device.
-     * <p>
-     * @apiNote OpenCL supports binding to multiple devices as well
-     */
-    static ClContextJocl createContext(final ClDeviceJocl device) {
-        val ret_pointer = new int[1];
-        val contextId = CL.clCreateContext(null, 1, new cl_device_id[]{device.id()}, null, null, ret_pointer);
-        val ret = ret_pointer[0];
-        _Util.assertSuccess(ret, ()->
-                String.format("failed to create context for device %s", device.getName()));
-        return new ClContextJocl(contextId, List.of(device));
     }
 
 }

@@ -24,7 +24,6 @@ import org.jocl.Sizeof;
 import org.jocl.cl_kernel;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.opencl.ClKernel;
@@ -35,7 +34,7 @@ public final class ClKernelJocl extends ClKernel {
 
     @Getter @Accessors(fluent = true) private final cl_kernel id;
 
-    public ClKernelJocl(final cl_kernel id, final ClProgram program, final String name) {
+    ClKernelJocl(final cl_kernel id, final ClProgram program, final String name) {
         super(program, name);
         this.id = id;
     }
@@ -88,16 +87,6 @@ public final class ClKernelJocl extends ClKernel {
         return kernel;
     }
 
-    /**
-     * Returns a new OpenCL kernel for given program.
-     */
-    static ClKernel createKernel(final ClProgramJocl program, final String kernelName) {
-        val ret_pointer = new int[1];
-        val kernelId = CL.clCreateKernel(program.id(), kernelName, ret_pointer);
-        int ret = ret_pointer[0];
-        _Util.assertSuccess(ret, ()->
-                String.format("failed to create kernel '%s' for program %s", kernelName, program));
-        return new ClKernelJocl(kernelId, program, kernelName);
-    }
+
 
 }
