@@ -20,30 +20,28 @@ package jcompute.opencl;
 
 import org.jocl.CL;
 import org.jocl.cl_command_queue;
-import org.jocl.cl_queue_properties;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.core.shape.Shape;
 
 @RequiredArgsConstructor
-public class ClCommandQueue implements ClResource {
+public abstract class ClCommandQueue implements ClResource {
 
     @Getter @Accessors(fluent = true) private final cl_command_queue id;
     @Getter private final ClContext context;
 
-    public ClCommandQueue enqueueWriteBuffer(final ClMem memObj) {
+    public final ClCommandQueue enqueueWriteBuffer(final ClMem memObj) {
         return enqueueWriteBuffer(this, memObj);
     }
 
-    public ClCommandQueue enqueueReadBuffer(final ClMem memObj) {
+    public final ClCommandQueue enqueueReadBuffer(final ClMem memObj) {
         return enqueueReadBuffer(this, memObj);
     }
 
-    public ClCommandQueue enqueueNDRangeKernel(
+    public final ClCommandQueue enqueueNDRangeKernel(
             final ClKernel kernel,
             final Shape globalSize,
             final Shape localSize) {
@@ -52,7 +50,7 @@ public class ClCommandQueue implements ClResource {
                 new long[] {localSize.sizeX(), localSize.sizeY(), localSize.sizeZ()});
     }
 
-    public ClCommandQueue flush() {
+    public final ClCommandQueue flush() {
         final int ret = CL.clFlush(id());
         _Util.assertSuccess(
                 ret, ()->
@@ -60,7 +58,7 @@ public class ClCommandQueue implements ClResource {
         return this;
     }
 
-    public ClCommandQueue finish() {
+    public final ClCommandQueue finish() {
         final int ret = CL.clFinish(id());
         _Util.assertSuccess(
                 ret, ()->
@@ -71,7 +69,7 @@ public class ClCommandQueue implements ClResource {
     /**
      * localSize is auto
      */
-    public ClCommandQueue enqueueNDRangeKernel(
+    public final ClCommandQueue enqueueNDRangeKernel(
             final ClKernel kernel,
             final Shape globalSize) {
         return enqueueNDRangeKernel(this, kernel, globalSize.dimensionCount(),
@@ -80,7 +78,7 @@ public class ClCommandQueue implements ClResource {
     }
 
     @Override
-    public void free() {
+    public final void free() {
         flush();
         finish();
 
@@ -92,30 +90,13 @@ public class ClCommandQueue implements ClResource {
 
     // -- HELPER
 
-    /**
-     * Returns a new command queue for given context.
-     * @implNote yet only supports contexts bound to only a single device
-     */
-    static ClCommandQueue createQueue(final ClContext context) {
-        val deviceId = context.getSingleDeviceElseFail().id();
-        // zero terminated list of queue creation properties
-        // https://registry.khronos.org/OpenCL/sdk/3.0/docs/man/html/clCreateCommandQueueWithProperties.html
-        cl_queue_properties properties = new cl_queue_properties();
-        int[] ret_pointer = new int[1];
-        val queueId = CL.clCreateCommandQueueWithProperties(context.id(), deviceId, properties, ret_pointer );
-        val ret = ret_pointer[0];
-        _Util.assertSuccess(ret, ()->
-                String.format("failed to create command-queue for context %s", context));
-        return new ClCommandQueue(queueId, context);
-    }
-
     /* Transfer data to memory buffer */
     static ClCommandQueue enqueueWriteBuffer(final ClCommandQueue queue, final ClMem memObj) {
         int ret = CL.clEnqueueWriteBuffer(queue.id(), memObj.id(),
                 true, // blocking write
                 0,
                 memObj.size() * memObj.sizeOf(),
-                memObj.getPointer(),
+                _Jocl.pointerOf(memObj.computeArray()),
                 0,
                 null, null);
         _Util.assertSuccess(ret, ()->
@@ -129,7 +110,7 @@ public class ClCommandQueue implements ClResource {
                 true, // blocking read
                 0,
                 memObj.size() * memObj.sizeOf(),
-                memObj.getPointer(),
+                _Jocl.pointerOf(memObj.computeArray()),
                 0,
                 null, null);
         _Util.assertSuccess(ret, ()->

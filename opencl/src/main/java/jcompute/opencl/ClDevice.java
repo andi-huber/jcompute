@@ -34,7 +34,9 @@ import lombok.Getter;
 import lombok.val;
 import lombok.experimental.Accessors;
 
-public class ClDevice {
+import jcompute.opencl.jocl.ClDeviceJocl;
+
+public abstract class ClDevice {
 
     public enum DeviceType {
         CPU,
@@ -76,7 +78,7 @@ public class ClDevice {
     @Getter private final int index;
     @Getter @Accessors(fluent = true) private final cl_device_id id;
 
-    private ClDevice(
+    protected ClDevice(
             final ClPlatform platform,
             final int index,
             final cl_device_id deviceHandle) {
@@ -114,9 +116,7 @@ public class ClDevice {
         return getInt(id, CL.CL_DEVICE_MAX_CLOCK_FREQUENCY);
     }
 
-    public ClContext createContext() {
-        return ClContext.createContext(this);
-    }
+    public abstract ClContext createContext();
 
     // -- HELPER
 
@@ -133,7 +133,7 @@ public class ClDevice {
         val devices = new ArrayList<ClDevice>(deviceCount);
         for (int i = 0; i < deviceCount; i++) {
             devices.add(
-                    new ClDevice(null, i, deviceBuffer[i]));
+                    new ClDeviceJocl(null, i, deviceBuffer[i]));
         }
 
         return Collections.unmodifiableList(devices);

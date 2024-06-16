@@ -18,30 +18,28 @@
  */
 package jcompute.opencl;
 
-import org.jocl.cl_mem;
+import org.jocl.Pointer;
 
+import lombok.experimental.UtilityClass;
+
+import jcompute.core.mem.ByteArray;
+import jcompute.core.mem.DoubleArray;
 import jcompute.core.mem.JComputeArray;
+import jcompute.core.mem.LongArray;
+import jcompute.core.mem.ShortArray;
 
-public interface ClMem extends ClResource {
+@UtilityClass
+class _Jocl {
 
-    cl_mem id();
-
-    ClContext context();
-
-    /**
-     * The number of elements contained in the underlying array.
-     */
-    default long size() {
-        return computeArray().shape().totalSize();
+    Pointer pointerOf(final JComputeArray jcomputeArray) {
+        final Pointer pointer = switch (jcomputeArray) {
+            case ByteArray array -> Pointer.to(array.toBuffer());
+            case ShortArray array -> Pointer.to(array.toBuffer());
+            case LongArray array -> Pointer.to(array.toBuffer());
+            case DoubleArray array -> Pointer.to(array.toBuffer());
+            default -> throw new IllegalArgumentException("Unexpected value: " + jcomputeArray.getClass());
+        };
+        return pointer;
     }
-
-    /**
-     * The number bytes (required) for each element in the underlying array.
-     */
-    default int sizeOf() {
-        return computeArray().bytesPerElement();
-    }
-
-    JComputeArray computeArray();
 
 }

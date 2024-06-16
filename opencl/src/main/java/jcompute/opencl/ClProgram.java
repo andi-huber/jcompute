@@ -18,7 +18,6 @@
  */
 package jcompute.opencl;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.jocl.CL;
@@ -31,7 +30,7 @@ import lombok.val;
 import lombok.experimental.Accessors;
 
 @RequiredArgsConstructor
-public class ClProgram implements ClResource {
+public abstract class ClProgram implements ClResource {
 
     @Getter @Accessors(fluent = true) private final cl_program id;
     @Getter private final ClContext context;
@@ -46,7 +45,7 @@ public class ClProgram implements ClResource {
     }
 
     @Override
-    public void free() {
+    public final void free() {
         childResources.forEach(ClResource::free);
         final int ret = CL.clReleaseProgram(id());
         _Util.assertSuccess(ret, ()->
@@ -54,23 +53,11 @@ public class ClProgram implements ClResource {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return String.format("ClProgram[%s]", context);
     }
 
-    // -- HELPER
 
-    /* Create Kernel program from the read in source */
-    static ClProgram createProgram(final ClContext context, final String source_str) {
-        var ret_pointer = new int[1];
-        val programId = CL.clCreateProgramWithSource(context.id(), 1,
-                new String[]{source_str}, null, ret_pointer);
-        int ret = ret_pointer[0];
-        _Util.assertSuccess(ret, ()->
-            String.format("failed to create program for context %s",
-                    context));
-        return new ClProgram(programId, context, new LinkedList<ClResource>());
-    }
 
     /**
      * @implNote yet only supports contexts bound to only a single device
@@ -102,7 +89,7 @@ public class ClProgram implements ClResource {
         return _Util.readString((a, b, c)->CL.clGetProgramBuildInfo(program.id(), deviceId, paramName, a, b, c));
     }
 
-    private <T extends ClResource> T add(final T resource) {
+    protected final <T extends ClResource> T add(final T resource) {
         this.childResources.add(0, resource);
         return resource;
     }

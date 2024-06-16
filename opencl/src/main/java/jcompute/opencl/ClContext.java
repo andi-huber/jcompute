@@ -24,7 +24,6 @@ import java.util.Stack;
 
 import org.jocl.CL;
 import org.jocl.cl_context;
-import org.jocl.cl_device_id;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -35,67 +34,47 @@ import lombok.experimental.Accessors;
 import jcompute.core.mem.JComputeArray;
 
 @RequiredArgsConstructor
-public class ClContext implements AutoCloseable {
+public abstract class ClContext implements AutoCloseable {
 
-    @Getter @Accessors(fluent = true) private final cl_context id;
-    @Getter private final List<ClDevice> devices;
-    @Getter private final Stack<ClResource> childResources;
+    public abstract cl_context id();
+    @Getter @Accessors(fluent = true) private final List<ClDevice> devices;
+    private final Stack<ClResource> childResources = new Stack<ClResource>();
 
-    public ClCommandQueue createQueue() {
-        return add(ClCommandQueue.createQueue(this));
-    }
+    public abstract ClCommandQueue createQueue();
 
-    public ClProgram createProgram(final String programSource) {
-        return add(ClProgram.createProgram(this, programSource).build());
-    }
+    public abstract ClProgram createProgram(String programSource);
 
-    public ClMem createMemoryReadWrite(final JComputeArray array) {
-        return add(ClMem.createMemory(this, array, CL.CL_MEM_READ_WRITE));
-    }
-    public ClMem createMemoryReadOnly(final JComputeArray array) {
-        return add(ClMem.createMemory(this, array, CL.CL_MEM_READ_ONLY));
-    }
-    public ClMem createMemoryWriteOnly(final JComputeArray array) {
-        return add(ClMem.createMemory(this, array, CL.CL_MEM_WRITE_ONLY));
-    }
+    public abstract ClMem createMemoryReadWrite(final JComputeArray array);
+    public abstract ClMem createMemoryReadOnly(final JComputeArray array);
+    public abstract ClMem createMemoryWriteOnly(final JComputeArray array);
 
-//    public ClMem createMemoryReadWrite(final org.jocl.Pointer mem) {
-//        return add(ClMem.createMemory(this, mem, CL.CL_MEM_READ_WRITE));
-//    }
-//    public ClMem createMemoryReadOnly(final org.jocl.Pointer mem) {
-//        return add(ClMem.createMemory(this, mem, CL.CL_MEM_READ_ONLY));
-//    }
-//    public ClMem createMemoryWriteOnly(final org.jocl.Pointer mem) {
-//        return add(ClMem.createMemory(this, mem, CL.CL_MEM_WRITE_ONLY));
-//    }
-
-    public ClDevice getSingleDeviceElseFail() {
-        if(getDevices().size()!=1) {
+    public final ClDevice getSingleDeviceElseFail() {
+        if(devices().size()!=1) {
             throw new IllegalArgumentException(String.format(
                     "context %s is required to be bound to exaclty one device", this));
         }
-        return getDevices().get(0);
+        return devices().get(0);
     }
 
     @Override
-    public void close() {
+    public final void close() {
         while(!childResources.isEmpty()) {
             childResources.pop().free();
         }
         final int ret = CL.clReleaseContext(id());
         _Util.assertSuccess(ret, ()->
-            String.format("failed to release context for devices %s", devices));
+            String.format("failed to release context for devices %s", devices()));
     }
 
     @Override
     public String toString() {
-        return String.format("ClContext[%s]", devices);
+        return String.format("ClContext[%s]", devices());
     }
 
     // -- UTILITY
 
     @SneakyThrows
-    public ClProgram createProgram(final Class<?> cls, final String resourceName) {
+    public final ClProgram createProgram(final Class<?> cls, final String resourceName) {
         try(val is = cls.getResourceAsStream(resourceName)){
             val source = _Util.read(is, StandardCharsets.UTF_8);
             return createProgram(source);
@@ -104,24 +83,9 @@ public class ClContext implements AutoCloseable {
 
     // -- HELPER
 
-    private <T extends ClResource> T add(final T resource) {
+    protected final <T extends ClResource> T add(final T resource) {
         childResources.push(resource);
         return resource;
     }
-
-    /**
-     * Returns a context bound to a single device.
-     * <p>
-     * @apiNote OpenCL supports binding to multiple devices as well
-     */
-    static ClContext createContext(final ClDevice device) {
-        val ret_pointer = new int[1];
-        val contextId = CL.clCreateContext(null, 1, new cl_device_id[]{device.id()}, null, null, ret_pointer);
-        val ret = ret_pointer[0];
-        _Util.assertSuccess(ret, ()->
-                String.format("failed to create context for device %s", device.getName()));
-        return new ClContext(contextId, List.of(device), new Stack<ClResource>());
-    }
-
 
 }

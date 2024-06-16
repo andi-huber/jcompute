@@ -16,32 +16,24 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.opencl;
+package jcompute.opencl.jocl;
 
-import org.jocl.cl_mem;
+import org.jocl.cl_device_id;
 
-import jcompute.core.mem.JComputeArray;
+import jcompute.opencl.ClDevice;
+import jcompute.opencl.ClPlatform;
 
-public interface ClMem extends ClResource {
+public class ClDeviceJocl extends ClDevice {
 
-    cl_mem id();
-
-    ClContext context();
-
-    /**
-     * The number of elements contained in the underlying array.
-     */
-    default long size() {
-        return computeArray().shape().totalSize();
+    public ClDeviceJocl(
+            final ClPlatform platform,
+            final int index,
+            final cl_device_id deviceHandle) {
+        super(platform, index, deviceHandle);
     }
 
-    /**
-     * The number bytes (required) for each element in the underlying array.
-     */
-    default int sizeOf() {
-        return computeArray().bytesPerElement();
+    public ClContextJocl createContext() {
+        return ClContextJocl.createContext(this);
     }
-
-    JComputeArray computeArray();
 
 }
