@@ -87,6 +87,4 @@ public final class ClKernelJocl extends ClKernel {
         return kernel;
     }
 
-
-
 }

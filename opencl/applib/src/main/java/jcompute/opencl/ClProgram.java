@@ -18,6 +18,7 @@
  */
 package jcompute.opencl;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import lombok.AccessLevel;
@@ -28,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 public abstract class ClProgram implements ClResource {
 
     @Getter private final ClContext context;
-    @Getter private final List<ClResource> childResources;
+    private final List<ClResource> childResources = new LinkedList<ClResource>();
 
     public abstract ClProgram build();
     protected abstract ClKernel createKernelInternal(final String kernelName);

@@ -69,7 +69,7 @@ public final class ClPlatformJocl implements ClPlatform {
         val devices = new ArrayList<ClDevice>(deviceCount);
         for (int i = 0; i < deviceCount; i++) {
             devices.add(
-                    new ClDeviceJocl(deviceIds[i], null, i));
+                    new ClDeviceJocl(deviceIds[i], platform, i));
         }
 
         return Collections.unmodifiableList(devices);

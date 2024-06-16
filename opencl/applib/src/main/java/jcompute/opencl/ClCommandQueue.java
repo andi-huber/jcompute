@@ -41,15 +41,12 @@ public abstract class ClCommandQueue implements ClResource {
      * @param kernel
      * @param work_dim - number of dimensions used to specify the global work-items and work-items in
             the work-group
-     * @param global_work_size
-     * @param local_work_size
      */
     protected abstract int enqueueNDRangeKernel(
             ClKernel kernel,
             int work_dim,
-            long[] global_work_size,
-            long[] local_work_size);
-
+            Shape globalSize,
+            Shape localSize);
 
     @Override
     public final void free() {
@@ -90,21 +87,14 @@ public abstract class ClCommandQueue implements ClResource {
     public final ClCommandQueue enqueueNDRangeKernel(
             final ClKernel kernel,
             final Shape globalSize) {
-        int ret = enqueueNDRangeKernel(kernel, globalSize.dimensionCount(),
-                new long[] {globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()},
-                null);
-        _Util.assertSuccess(ret, ()->
-            String.format("failed to enqueue Kernel for context %s", getContext()));
-        return this;
+        return enqueueNDRangeKernel(kernel, globalSize, null);
     }
 
     public final ClCommandQueue enqueueNDRangeKernel(
             final ClKernel kernel,
             final Shape globalSize,
             final Shape localSize) {
-        int ret = enqueueNDRangeKernel(kernel, globalSize.dimensionCount(),
-                new long[] {globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()},
-                new long[] {localSize.sizeX(), localSize.sizeY(), localSize.sizeZ()});
+        int ret = enqueueNDRangeKernel(kernel, globalSize.dimensionCount(), globalSize, localSize);
         _Util.assertSuccess(ret, ()->
             String.format("failed to enqueue Kernel for context %s", getContext()));
         return this;

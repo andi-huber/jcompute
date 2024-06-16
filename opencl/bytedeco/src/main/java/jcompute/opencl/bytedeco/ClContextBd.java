@@ -16,13 +16,15 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.opencl.jocl;
+package jcompute.opencl.bytedeco;
 
 import java.util.List;
 
-import org.jocl.CL;
-import org.jocl.cl_context;
-import org.jocl.cl_queue_properties;
+import org.bytedeco.javacpp.LongPointer;
+import org.bytedeco.javacpp.PointerPointer;
+import org.bytedeco.javacpp.SizeTPointer;
+import org.bytedeco.opencl._cl_context;
+import org.bytedeco.opencl.global.OpenCL;
 
 import lombok.Getter;
 import lombok.val;
@@ -36,52 +38,59 @@ import jcompute.opencl.ClMem;
 import jcompute.opencl.ClMem.MemMode;
 import jcompute.opencl.ClProgram;
 
-public final class ClContextJocl extends ClContext {
+public final class ClContextBd extends ClContext {
 
-    @Getter @Accessors(fluent = true) private final cl_context id;
+    @Getter @Accessors(fluent = true) private final _cl_context id;
 
-    ClContextJocl(final cl_context id, final List<ClDevice> devices) {
+    ClContextBd(final _cl_context id, final List<ClDevice> devices) {
         super(devices);
         this.id = id;
     }
 
     @Override
     protected ClCommandQueue createQueueInternal() {
-        final ClContextJocl context = this;
-        val deviceId = ((ClDeviceJocl)context.getSingleDeviceElseFail()).id();
+        final ClContextBd context = this;
+        val deviceId = ((ClDeviceBd)context.getSingleDeviceElseFail()).id();
+        val properties = new LongPointer(new long[] {
+//              OpenCL.CL_QUEUE_PROPERTIES,
+//              | OpenCL.CL_QUEUE_ON_DEVICE
+//              | OpenCL.CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE,
+              0}); // zero terminated list of queue creation properties
+      // https://registry.khronos.org/OpenCL/sdk/3.0/docs/man/html/clCreateCommandQueueWithProperties.html
         val queueId = _Util.checkedApply(ret_pointer->
-            CL.clCreateCommandQueueWithProperties(
+            OpenCL.clCreateCommandQueueWithProperties(
                 context.id(),
                 deviceId,
-                // zero terminated list of queue creation properties
-                // https://registry.khronos.org/OpenCL/sdk/3.0/docs/man/html/clCreateCommandQueueWithProperties.html
-                new cl_queue_properties(),
+                properties,
                 ret_pointer),
             ()->String.format("failed to create command-queue for context %s", context));
-        return new ClCommandQueueJocl(queueId, context);
+        return new ClCommandQueueBd(queueId, context);
     }
 
     @Override
     protected ClProgram createProgramInternal(final String programSource) {
-        val programId = _Util.checkedApply(ret_pointer->
-            CL.clCreateProgramWithSource(this.id(), 1, new String[]{programSource}, null, ret_pointer),
-            ()-> String.format("failed to create program for context %s", this));
-        return new ClProgramJocl(programId, this).build();
+        try(var sizeTPtr = new SizeTPointer(1); var src = new PointerPointer<>(programSource)){
+            sizeTPtr.put(programSource.length());
+            val programId = _Util.checkedApply(ret_pointer->
+                OpenCL.clCreateProgramWithSource(this.id(), 1, src, sizeTPtr, ret_pointer),
+                ()-> String.format("failed to create program for context %s", this));
+            return new ClProgramBd(programId, this).build();
+        }
     }
 
     @Override
     protected ClMem createMemoryInternal(final JComputeArray computeArray, final MemMode memMode) {
         var clMemMode = switch (memMode) {
-            case MEM_READ_WRITE -> CL.CL_MEM_READ_WRITE;
-            case MEM_READ_ONLY -> CL.CL_MEM_READ_ONLY;
-            case MEM_WRITE_ONLY -> CL.CL_MEM_WRITE_ONLY;
+            case MEM_READ_WRITE -> OpenCL.CL_MEM_READ_WRITE;
+            case MEM_READ_ONLY -> OpenCL.CL_MEM_READ_ONLY;
+            case MEM_WRITE_ONLY -> OpenCL.CL_MEM_WRITE_ONLY;
         };
         return createMemoryInternal(computeArray, clMemMode);
     }
 
     @Override
     protected int releaseContextIntenral() {
-        return CL.clReleaseContext(id());
+        return OpenCL.clReleaseContext(id());
     }
 
     // -- HELPER
@@ -89,14 +98,15 @@ public final class ClContextJocl extends ClContext {
     /**
      * Returns a new memory object for given context.
      */
-    private ClMemJocl createMemoryInternal(final JComputeArray computeArray, final long clMemMode) {
+    private ClMemBd createMemoryInternal(final JComputeArray computeArray, final long clMemMode) {
         long size = computeArray.shape().totalSize();
         int sizeOf = computeArray.bytesPerElement();
 
         var memId = _Util.checkedApply(ret_pointer->
-            CL.clCreateBuffer(this.id(), clMemMode, size * sizeOf, null, ret_pointer),
+            OpenCL.clCreateBuffer(this.id(), clMemMode, size * sizeOf, null, ret_pointer),
             ()->String.format("failed to create memory object (size=%d*%d) for context %s", sizeOf, size, this));
-        return new ClMemJocl(memId, this, computeArray);
+        return new ClMemBd(memId, this, computeArray);
     }
+
 
 }

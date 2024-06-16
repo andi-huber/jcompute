@@ -16,11 +16,16 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.opencl.jocl;
+package jcompute.opencl.bytedeco;
 
-import org.jocl.CL;
-import org.jocl.Pointer;
-import org.jocl.cl_command_queue;
+import org.bytedeco.javacpp.Pointer;
+import org.bytedeco.javacpp.PointerPointer;
+import org.bytedeco.javacpp.SizeTPointer;
+import org.bytedeco.opencl._cl_command_queue;
+import org.bytedeco.opencl.global.OpenCL;
+
+import static org.bytedeco.opencl.global.OpenCL.CL_FALSE;
+import static org.bytedeco.opencl.global.OpenCL.CL_TRUE;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -35,52 +40,53 @@ import jcompute.opencl.ClCommandQueue;
 import jcompute.opencl.ClContext;
 import jcompute.opencl.ClKernel;
 import jcompute.opencl.ClMem;
+import jcompute.opencl.bytedeco.util.PointerUtils;
 
-public final class ClCommandQueueJocl extends ClCommandQueue {
+public final class ClCommandQueueBd extends ClCommandQueue {
 
-    @Getter @Accessors(fluent = true) private final cl_command_queue id;
+    @Getter @Accessors(fluent = true) private final _cl_command_queue id;
 
-    ClCommandQueueJocl(final cl_command_queue id, final ClContext context) {
+    ClCommandQueueBd(final _cl_command_queue id, final ClContext context) {
         super(context);
         this.id = id;
     }
 
     @Override
     protected int flushQueue() {
-        return CL.clFlush(id());
+        return OpenCL.clFlush(id());
     }
     @Override
     protected int finishQueue() {
-        return CL.clFinish(id());
+        return OpenCL.clFinish(id());
     }
     @Override
     protected int releaseQueue() {
-        return CL.clReleaseCommandQueue(id());
+        return OpenCL.clReleaseCommandQueue(id());
     }
     @Override
     protected int enqueueWriteBuffer(final ClMem memObj, final boolean blocking) {
-        return CL.clEnqueueWriteBuffer(id(), ((ClMemJocl)memObj).id(),
-                blocking,
+        return OpenCL.clEnqueueWriteBuffer(id(), ((ClMemBd)memObj).id(),
+                blocking ? CL_TRUE : CL_FALSE,
                 0,
                 memObj.size() * memObj.sizeOf(),
                 pointerOf(memObj.computeArray()),
                 0,
-                null, null);
+                (PointerPointer<?>)null, null);
     }
     @Override
     protected int enqueueReadBuffer(final ClMem memObj, final boolean blocking) {
-        return CL.clEnqueueReadBuffer(id(), ((ClMemJocl)memObj).id(),
-                blocking,
+        return OpenCL.clEnqueueReadBuffer(id(), ((ClMemBd)memObj).id(),
+                blocking ? CL_TRUE : CL_FALSE,
                 0,
                 memObj.size() * memObj.sizeOf(),
                 pointerOf(memObj.computeArray()),
                 0,
-                null, null);
+                (PointerPointer<?>)null, null);
     }
 
     @Override
     public String toString() {
-        return "addr: " + id.getNativePointer();
+        return "addr: " + id.address();
     }
 
     @Override
@@ -88,24 +94,24 @@ public final class ClCommandQueueJocl extends ClCommandQueue {
             final ClKernel kernel, final int work_dim,
             final Shape globalSize, final Shape localSize) {
 
-        final long[] global_work_size = new long[] {globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()};
-        final long[] local_work_size = localSize!=null
-                ? new long[] {localSize.sizeX(), localSize.sizeY(), localSize.sizeZ()}
+        var global_work_size = new SizeTPointer(globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ());
+        var local_work_size = localSize!=null
+                ? new SizeTPointer(localSize.sizeX(), localSize.sizeY(), localSize.sizeZ())
                 : null;
 
-        return CL.clEnqueueNDRangeKernel(id(), ((ClKernelJocl)kernel).id(), work_dim, null,
+        return OpenCL.clEnqueueNDRangeKernel(id(), ((ClKernelBd)kernel).id(), work_dim, null,
                 global_work_size, local_work_size, 0,
-                null, null);
+                (PointerPointer<?>)null, null);
     }
 
     // -- HELPER
 
     private static Pointer pointerOf(final JComputeArray jcomputeArray) {
         final Pointer pointer = switch (jcomputeArray) {
-            case ByteArray array -> Pointer.to(array.toBuffer());
-            case ShortArray array -> Pointer.to(array.toBuffer());
-            case LongArray array -> Pointer.to(array.toBuffer());
-            case DoubleArray array -> Pointer.to(array.toBuffer());
+            case ByteArray array -> PointerUtils.pointer(array);
+            case ShortArray array -> PointerUtils.pointer(array);
+            case LongArray array -> PointerUtils.pointer(array);
+            case DoubleArray array -> PointerUtils.pointer(array);
             default -> throw new IllegalArgumentException("Unexpected value: " + jcomputeArray.getClass());
         };
         return pointer;

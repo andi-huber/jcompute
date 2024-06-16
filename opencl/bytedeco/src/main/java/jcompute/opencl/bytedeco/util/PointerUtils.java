@@ -23,12 +23,14 @@ import java.lang.foreign.MemorySegment;
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacpp.LongPointer;
+import org.bytedeco.javacpp.ShortPointer;
 
 import lombok.experimental.UtilityClass;
 
 import jcompute.core.mem.ByteArray;
 import jcompute.core.mem.DoubleArray;
 import jcompute.core.mem.LongArray;
+import jcompute.core.mem.ShortArray;
 import jcompute.core.util.primitive.LongUtils;
 
 @UtilityClass
@@ -38,6 +40,10 @@ public class PointerUtils {
 
     public BytePointer pointer(final ByteArray array) {
         return new BytePointer(array.memorySegment().asByteBuffer());
+    }
+
+    public ShortPointer pointer(final ShortArray array) {
+        return new ShortPointer(array.memorySegment().asByteBuffer().asShortBuffer());
     }
 
     public LongPointer pointer(final LongArray array) {

@@ -16,11 +16,10 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.opencl.jocl;
+package jcompute.opencl.bytedeco;
 
-import org.jocl.CL;
-import org.jocl.cl_device_id;
-import org.jocl.cl_program;
+import org.bytedeco.opencl._cl_program;
+import org.bytedeco.opencl.global.OpenCL;
 
 import lombok.Getter;
 import lombok.val;
@@ -30,12 +29,12 @@ import jcompute.opencl.ClContext;
 import jcompute.opencl.ClKernel;
 import jcompute.opencl.ClProgram;
 
-public final class ClProgramJocl extends ClProgram {
+public final class ClProgramBd extends ClProgram {
 
-    @Getter @Accessors(fluent = true) private final cl_program id;
+    @Getter @Accessors(fluent = true) private final _cl_program id;
 
-    ClProgramJocl(
-            final cl_program id,
+    ClProgramBd(
+            final _cl_program id,
             final ClContext context) {
         super(context);
         this.id = id;
@@ -46,7 +45,7 @@ public final class ClProgramJocl extends ClProgram {
      */
     @Override
     public ClProgram build()  {
-        val deviceId = ((ClDeviceJocl)getContext().getSingleDeviceElseFail()).id();
+        val deviceId = ((ClDeviceBd)getContext().getSingleDeviceElseFail()).id();
 
         // https://www.intel.com/content/www/us/en/docs/opencl-sdk/developer-reference-processor-graphics/2015-1/optimization-options.html
         String options = null; // all enabled by default
@@ -55,33 +54,33 @@ public final class ClProgramJocl extends ClProgram {
 
         /* Build Kernel Program */
         _Util.assertSuccess(
-                CL.clBuildProgram(id(), 1, new cl_device_id[] {deviceId}, options, null, null),
+                OpenCL.clBuildProgram(id(), 1, deviceId, options, null, null),
                 ()->String.format("failed to build program %s%n"
                     + "build-log: %s",
                     this,
-                    getBuildProgramInfo(CL.CL_PROGRAM_BUILD_LOG)
+                    getBuildProgramInfo(OpenCL.CL_PROGRAM_BUILD_LOG)
                     ));
         return this;
     }
 
     @Override
     protected int releaseProgramInternal() {
-        return CL.clReleaseProgram(id());
+        return OpenCL.clReleaseProgram(id());
     }
 
     @Override
     protected ClKernel createKernelInternal(final String kernelName) {
         val kernelId = _Util.checkedApply(ret_pointer->
-                CL.clCreateKernel(this.id(), kernelName, ret_pointer),
+                OpenCL.clCreateKernel(this.id(), kernelName, ret_pointer),
                 ()->String.format("failed to create kernel '%s' for program %s", kernelName, this));
-        return new ClKernelJocl(kernelId, this, kernelName);
+        return new ClKernelBd(kernelId, this, kernelName);
     }
 
     // -- HELPER
 
     private String getBuildProgramInfo(final int paramName) {
-        val deviceId = ((ClDeviceJocl)getContext().getSingleDeviceElseFail()).id();
-        return _Util.readString((a, b, c)->CL.clGetProgramBuildInfo(id(), deviceId, paramName, a, b, c));
+        val deviceId = ((ClDeviceBd)getContext().getSingleDeviceElseFail()).id();
+        return _Util.readString((a, b, c)->OpenCL.clGetProgramBuildInfo(id(), deviceId, paramName, a, b, c));
     }
 
 }
