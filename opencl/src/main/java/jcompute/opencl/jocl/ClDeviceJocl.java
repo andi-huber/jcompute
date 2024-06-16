@@ -18,7 +18,16 @@
  */
 package jcompute.opencl.jocl;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.jocl.CL;
 import org.jocl.cl_device_id;
+
+import static org.jocl.CL.clGetDeviceIDs;
+
+import lombok.val;
 
 import jcompute.opencl.ClDevice;
 import jcompute.opencl.ClPlatform;
@@ -32,8 +41,28 @@ public class ClDeviceJocl extends ClDevice {
         super(platform, index, deviceHandle);
     }
 
+    @Override
     public ClContextJocl createContext() {
         return ClContextJocl.createContext(this);
+    }
+
+    static List<ClDevice> listDevices(final ClPlatformJocl platform) {
+        val platformId = platform.id();
+        // Obtain the number of devices for the platform
+        final int[] numDevicesRef = new int[1];
+        clGetDeviceIDs(platformId, CL.CL_DEVICE_TYPE_ALL, 0, null, numDevicesRef);
+        final int deviceCount = numDevicesRef[0];
+
+        val deviceBuffer = new cl_device_id[deviceCount];
+        clGetDeviceIDs(platformId, CL.CL_DEVICE_TYPE_ALL, deviceCount, deviceBuffer, (int[])null);
+
+        val devices = new ArrayList<ClDevice>(deviceCount);
+        for (int i = 0; i < deviceCount; i++) {
+            devices.add(
+                    new ClDeviceJocl(null, i, deviceBuffer[i]));
+        }
+
+        return Collections.unmodifiableList(devices);
     }
 
 }

@@ -16,26 +16,15 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.opencl;
+package jcompute.opencl.spi;
 
-import java.util.List;
-import java.util.stream.Stream;
+import jcompute.opencl.ClBinding;
 
-import jcompute.opencl.spi.OpenCLBindings;
+public interface OpenCLBindingProvider {
 
-public interface ClPlatform {
-
-    public static List<ClPlatform> listPlatforms() {
-        return OpenCLBindings.getDefaultBinding().listPlatforms();
-    }
-
-    public static Stream<ClDevice> streamAll() {
-        return ClPlatform.listPlatforms().stream()
-                .flatMap(platform->platform.getDevices().stream());
-    }
-
-    List<ClDevice> getDevices();
-
-    String getPlatformVersion();
+    /**
+     * Entry point into the OpenCL world.
+     */
+    ClBinding getBinding();
 
 }

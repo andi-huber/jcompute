@@ -19,23 +19,11 @@
 package jcompute.opencl;
 
 import java.util.List;
-import java.util.stream.Stream;
 
-import jcompute.opencl.spi.OpenCLBindings;
+/**
+ * Entry point into the OpenCL world.
+ */
+public interface ClBinding {
 
-public interface ClPlatform {
-
-    public static List<ClPlatform> listPlatforms() {
-        return OpenCLBindings.getDefaultBinding().listPlatforms();
-    }
-
-    public static Stream<ClDevice> streamAll() {
-        return ClPlatform.listPlatforms().stream()
-                .flatMap(platform->platform.getDevices().stream());
-    }
-
-    List<ClDevice> getDevices();
-
-    String getPlatformVersion();
-
+    List<ClPlatform> listPlatforms();
 }

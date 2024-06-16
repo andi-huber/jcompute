@@ -18,23 +18,17 @@
  */
 package jcompute.opencl;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.stream.Stream;
 
 import org.jocl.CL;
 import org.jocl.cl_device_id;
 
-import static org.jocl.CL.clGetDeviceIDs;
 import static org.jocl.CL.clGetDeviceInfo;
 
 import lombok.Getter;
 import lombok.val;
 import lombok.experimental.Accessors;
-
-import jcompute.opencl.jocl.ClDeviceJocl;
 
 public abstract class ClDevice {
 
@@ -119,25 +113,6 @@ public abstract class ClDevice {
     public abstract ClContext createContext();
 
     // -- HELPER
-
-    static List<ClDevice> listDevices(final ClPlatform platform) {
-        val platformId = platform.id();
-        // Obtain the number of devices for the platform
-        final int[] numDevicesRef = new int[1];
-        clGetDeviceIDs(platformId, CL.CL_DEVICE_TYPE_ALL, 0, null, numDevicesRef);
-        final int deviceCount = numDevicesRef[0];
-
-        val deviceBuffer = new cl_device_id[deviceCount];
-        clGetDeviceIDs(platformId, CL.CL_DEVICE_TYPE_ALL, deviceCount, deviceBuffer, (int[])null);
-
-        val devices = new ArrayList<ClDevice>(deviceCount);
-        for (int i = 0; i < deviceCount; i++) {
-            devices.add(
-                    new ClDeviceJocl(null, i, deviceBuffer[i]));
-        }
-
-        return Collections.unmodifiableList(devices);
-    }
 
     private static String getString(final cl_device_id deviceId, final int paramName) {
         return _Util.readString((a, b, c)->clGetDeviceInfo(deviceId, paramName, a, b, c)).trim();
