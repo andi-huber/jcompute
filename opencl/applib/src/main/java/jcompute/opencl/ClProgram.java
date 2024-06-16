@@ -31,14 +31,20 @@ public abstract class ClProgram implements ClResource {
     @Getter private final List<ClResource> childResources;
 
     public abstract ClProgram build();
+    protected abstract ClKernel createKernelInternal(final String kernelName);
+    protected abstract int releaseProgramInternal();
 
-    public abstract ClKernel createKernel(final String kernelName);
-    protected abstract int releaseProgram();
+    /**
+     * Returns a new OpenCL kernel for given program.
+     */
+    public final ClKernel createKernel(final String kernelName) {
+        return add(createKernelInternal(kernelName));
+    }
 
     @Override
     public final void free() {
         childResources.forEach(ClResource::free);
-        _Util.assertSuccess(releaseProgram(), ()->
+        _Util.assertSuccess(releaseProgramInternal(), ()->
             String.format("failed to release program context %s", context));
     }
 
@@ -47,7 +53,9 @@ public abstract class ClProgram implements ClResource {
         return String.format("ClProgram[%s]", context);
     }
 
-    protected final <T extends ClResource> T add(final T resource) {
+    // -- HELPER
+
+    private final <T extends ClResource> T add(final T resource) {
         this.childResources.add(0, resource);
         return resource;
     }

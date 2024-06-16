@@ -30,6 +30,7 @@ import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.core.mem.JComputeArray;
+import jcompute.opencl.ClMem.MemMode;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class ClContext implements AutoCloseable {
@@ -38,13 +39,10 @@ public abstract class ClContext implements AutoCloseable {
     @Getter @Accessors(fluent = true) private final List<ClDevice> devices;
     private final Stack<ClResource> childResources = new Stack<ClResource>();
 
-    public abstract ClCommandQueue createQueue();
-
-    public abstract ClProgram createProgram(String programSource);
-
-    public abstract ClMem createMemoryReadWrite(final JComputeArray array);
-    public abstract ClMem createMemoryReadOnly(final JComputeArray array);
-    public abstract ClMem createMemoryWriteOnly(final JComputeArray array);
+    protected abstract ClCommandQueue createQueueInternal();
+    protected abstract ClProgram createProgramInternal(String programSource);
+    protected abstract ClMem createMemoryInternal(JComputeArray array, MemMode memMode);
+    protected abstract int releaseContextIntenral();
 
     public final ClDevice getSingleDeviceElseFail() {
         if(devices().size()!=1) {
@@ -54,14 +52,34 @@ public abstract class ClContext implements AutoCloseable {
         return devices().get(0);
     }
 
-    protected abstract int releaseContext();
+    /**
+     * Returns a new command queue for given context.
+     * @implNote yet only supports contexts bound to only a single device
+     */
+    public final ClCommandQueue createQueue() {
+        return add(createQueueInternal());
+    }
+
+    public final ClProgram createProgram(final String programSource) {
+        return add(createProgramInternal(programSource));
+    }
+
+    public final ClMem createMemoryReadWrite(final JComputeArray array) {
+        return add(createMemoryInternal(array, MemMode.MEM_READ_WRITE));
+    }
+    public final ClMem createMemoryReadOnly(final JComputeArray array) {
+        return add(createMemoryInternal(array, MemMode.MEM_READ_ONLY));
+    }
+    public final ClMem createMemoryWriteOnly(final JComputeArray array) {
+        return add(createMemoryInternal(array, MemMode.MEM_WRITE_ONLY));
+    }
 
     @Override
     public final void close() {
         while(!childResources.isEmpty()) {
             childResources.pop().free();
         }
-        _Util.assertSuccess(releaseContext(), ()->
+        _Util.assertSuccess(releaseContextIntenral(), ()->
             String.format("failed to release context for devices %s", devices()));
     }
 
@@ -82,7 +100,7 @@ public abstract class ClContext implements AutoCloseable {
 
     // -- HELPER
 
-    protected final <T extends ClResource> T add(final T resource) {
+    private final <T extends ClResource> T add(final T resource) {
         childResources.push(resource);
         return resource;
     }

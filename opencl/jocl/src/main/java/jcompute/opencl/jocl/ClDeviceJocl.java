@@ -18,10 +18,13 @@
  */
 package jcompute.opencl.jocl;
 
+import java.util.List;
+
 import org.jocl.CL;
 import org.jocl.cl_device_id;
 
 import lombok.Getter;
+import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.opencl.ClContext;
@@ -40,14 +43,22 @@ public final class ClDeviceJocl extends ClDevice {
         this.id = id;
     }
 
+    /**
+     * Returns a context bound to a single device.
+     * <p>
+     * @apiNote OpenCL supports binding to multiple devices as well
+     */
     @Override
     public ClContext createContext() {
-        return _Jocl.createContext(this);
+        val contextId = _Util.checkedApply(ret_pointer->
+                CL.clCreateContext(null, 1, new cl_device_id[]{this.id()}, null, null, ret_pointer),
+                ()->String.format("failed to create context for device %s", this.getName()));
+        return new ClContextJocl(contextId, List.of(this));
     }
 
     @Override
     public DeviceType getType() {
-        return _Jocl.fromClDeviceType(getInt(id, CL.CL_DEVICE_TYPE));
+        return fromClDeviceType(getInt(id, CL.CL_DEVICE_TYPE));
     }
 
     @Override
@@ -95,6 +106,16 @@ public final class ClDeviceJocl extends ClDevice {
 
     private static int[] getInts(final cl_device_id deviceId, final int paramName, final int numValues) {
         return _Util.readInts((a, b, c)->CL.clGetDeviceInfo(deviceId, paramName, a, b, c));
+    }
+
+    private static DeviceType fromClDeviceType(final int cl_device_type) {
+        switch (cl_device_type) {
+        case (int)CL.CL_DEVICE_TYPE_CPU: return DeviceType.CPU;
+        case (int)CL.CL_DEVICE_TYPE_GPU: return DeviceType.GPU;
+        case (int)CL.CL_DEVICE_TYPE_ACCELERATOR: return DeviceType.ACCELERATOR;
+        default:
+            return DeviceType.OTHER;
+        }
     }
 
 }

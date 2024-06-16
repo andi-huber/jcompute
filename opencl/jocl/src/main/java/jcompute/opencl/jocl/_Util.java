@@ -18,6 +18,7 @@
  */
 package jcompute.opencl.jocl;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.jocl.CL;
@@ -28,11 +29,19 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 class _Util {
 
-    public void assertSuccess(final int ret, final Supplier<String> message) {
+    void assertSuccess(final int ret, final Supplier<String> message) {
         if(ret!=CL.CL_SUCCESS) {
             System.err.printf("%s%n", message.get());
             throw new IllegalStateException(message.get());
         }
+    }
+
+    <T> T checkedApply(final Function<int[], T> function, final Supplier<String> message) {
+        final int[] ret_pointer = new int[1];
+        final T t = function.apply(ret_pointer);
+        final int ret = ret_pointer[0];
+        _Util.assertSuccess(ret, message);
+        return t;
     }
 
     // -- DYNAMIC READ

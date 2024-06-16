@@ -28,6 +28,12 @@ import jcompute.core.mem.JComputeArray;
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class ClMem implements ClResource {
 
+    public enum MemMode {
+        MEM_READ_WRITE,
+        MEM_READ_ONLY,
+        MEM_WRITE_ONLY,
+    }
+
     @Getter @Accessors(fluent = true) final ClContext context;
     @Getter @Accessors(fluent = true) final JComputeArray computeArray;
 
