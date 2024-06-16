@@ -217,30 +217,6 @@ class _Jocl {
     // -- COMMAND QUEUE
 
     /**
-     * Execute OpenCL kernel
-     * @param queue
-     * @param kernel
-     * @param work_dim - number of dimensions used to specify the global work-items and work-items in
-            the work-group
-     * @param global_work_size
-     * @param local_work_size
-     */
-    ClCommandQueueJocl enqueueNDRangeKernel(
-            final ClCommandQueueJocl queue,
-            final ClKernelJocl kernel,
-            final int work_dim,
-            final long[] global_work_size,
-            final long[] local_work_size) {
-
-        int ret = CL.clEnqueueNDRangeKernel(queue.id(), kernel.id(), work_dim, null,
-                global_work_size, local_work_size, 0,
-                null, null);
-        _Util.assertSuccess(ret, ()->
-            String.format("failed to enqueue Kernel for context %s", queue.getContext()));
-        return queue;
-    }
-
-    /**
      * Returns a new command queue for given context.
      * @implNote yet only supports contexts bound to only a single device
      */

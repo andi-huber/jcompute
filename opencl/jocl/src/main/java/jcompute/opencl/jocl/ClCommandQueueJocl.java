@@ -24,7 +24,6 @@ import org.jocl.cl_command_queue;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
-import jcompute.core.shape.Shape;
 import jcompute.opencl.ClCommandQueue;
 import jcompute.opencl.ClContext;
 import jcompute.opencl.ClKernel;
@@ -77,26 +76,13 @@ public final class ClCommandQueueJocl extends ClCommandQueue {
         return "addr: " + id.getNativePointer();
     }
 
-    /**
-     * localSize is auto
-     */
     @Override
-    public final ClCommandQueue enqueueNDRangeKernel(
-            final ClKernel kernel,
-            final Shape globalSize) {
-        return _Jocl.enqueueNDRangeKernel(this, (ClKernelJocl)kernel, globalSize.dimensionCount(),
-                new long[] {globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()},
-                null);
-    }
-
-    @Override
-    public final ClCommandQueue enqueueNDRangeKernel(
-            final ClKernel kernel,
-            final Shape globalSize,
-            final Shape localSize) {
-        return _Jocl.enqueueNDRangeKernel(this, (ClKernelJocl)kernel, globalSize.dimensionCount(),
-                new long[] {globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()},
-                new long[] {localSize.sizeX(), localSize.sizeY(), localSize.sizeZ()});
+    protected int enqueueNDRangeKernel(
+            final ClKernel kernel, final int work_dim,
+            final long[] global_work_size, final long[] local_work_size) {
+        return CL.clEnqueueNDRangeKernel(id(), ((ClKernelJocl)kernel).id(), work_dim, null,
+                global_work_size, local_work_size, 0,
+                null, null);
     }
 
 }

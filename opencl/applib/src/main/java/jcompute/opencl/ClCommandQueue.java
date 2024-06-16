@@ -32,14 +32,44 @@ public abstract class ClCommandQueue implements ClResource {
     protected abstract int flushQueue();
     protected abstract int finishQueue();
     protected abstract int releaseQueue();
+
     protected abstract int enqueueWriteBuffer(ClMem memObj, boolean blocking);
     protected abstract int enqueueReadBuffer(ClMem memObj, boolean blocking);
+
+    /**
+     * Execute OpenCL kernel
+     * @param kernel
+     * @param work_dim - number of dimensions used to specify the global work-items and work-items in
+            the work-group
+     * @param global_work_size
+     * @param local_work_size
+     */
+    protected abstract int enqueueNDRangeKernel(
+            ClKernel kernel,
+            int work_dim,
+            long[] global_work_size,
+            long[] local_work_size);
+
 
     @Override
     public final void free() {
         flush();
         finish();
         releaseQueue();
+    }
+
+    public final ClCommandQueue flush() {
+        _Util.assertSuccess(
+                flushQueue(), ()->
+                    String.format("failed to flush command queue for context %s", context));
+        return this;
+    }
+
+    public final ClCommandQueue finish() {
+        _Util.assertSuccess(
+                finishQueue(), ()->
+                    String.format("failed to finish command queue for context %s", context));
+        return this;
     }
 
     public final ClCommandQueue enqueueWriteBuffer(final ClMem memObj) {
@@ -57,26 +87,26 @@ public abstract class ClCommandQueue implements ClResource {
     /**
      * localSize is auto
      */
-    public abstract ClCommandQueue enqueueNDRangeKernel(
+    public final ClCommandQueue enqueueNDRangeKernel(
             final ClKernel kernel,
-            final Shape globalSize);
-
-    public abstract ClCommandQueue enqueueNDRangeKernel(
-            final ClKernel kernel,
-            final Shape globalSize,
-            final Shape localSize);
-
-    public final ClCommandQueue flush() {
-        _Util.assertSuccess(
-                flushQueue(), ()->
-                    String.format("failed to flush command queue for context %s", context));
+            final Shape globalSize) {
+        int ret = enqueueNDRangeKernel(kernel, globalSize.dimensionCount(),
+                new long[] {globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()},
+                null);
+        _Util.assertSuccess(ret, ()->
+            String.format("failed to enqueue Kernel for context %s", getContext()));
         return this;
     }
 
-    public final ClCommandQueue finish() {
-        _Util.assertSuccess(
-                finishQueue(), ()->
-                    String.format("failed to finish command queue for context %s", context));
+    public final ClCommandQueue enqueueNDRangeKernel(
+            final ClKernel kernel,
+            final Shape globalSize,
+            final Shape localSize) {
+        int ret = enqueueNDRangeKernel(kernel, globalSize.dimensionCount(),
+                new long[] {globalSize.sizeX(), globalSize.sizeY(), globalSize.sizeZ()},
+                new long[] {localSize.sizeX(), localSize.sizeY(), localSize.sizeZ()});
+        _Util.assertSuccess(ret, ()->
+            String.format("failed to enqueue Kernel for context %s", getContext()));
         return this;
     }
 
