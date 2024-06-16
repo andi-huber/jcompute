@@ -18,29 +18,34 @@
   under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	
-	<parent>
-		<groupId>jcompute</groupId>
-		<artifactId>jcompute-bom</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
-	</parent>
-	
-	<artifactId>jcompute-tukaani</artifactId>
-	<name>JCompute - Compression (Tukaani)</name>
-	<description>
-		JCompute - LZMA Compression Library (Tukaani v1.9)
-		Redistributed from https://github.com/tukaani-project/xz-java.
-	</description>
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<properties>
-		<jar-plugin.automaticModuleName>jcompute.tukaani</jar-plugin.automaticModuleName>
-		<git-plugin.propertiesDir>jcompute/tukaani</git-plugin.propertiesDir>
-	</properties>
-	
-	<dependencies>
-	</dependencies>
-    
+    <parent>
+		<groupId>jcompute</groupId>
+        <artifactId>jcompute-opencl</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>jcompute-opencl-applib</artifactId>
+    <name>JCompute - OpenCL (Applib)</name>
+    <description>
+        JCompute - Thin layer of abstraction on top of OpenCL.
+    </description>
+
+    <properties>
+        <jar-plugin.automaticModuleName>jcompute.opencl.applib</jar-plugin.automaticModuleName>
+        <git-plugin.propertiesDir>jcompute/core/applib</git-plugin.propertiesDir>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>jcompute</groupId>
+            <artifactId>jcompute-core</artifactId>
+        </dependency>
+
+    </dependencies>
+
 </project>

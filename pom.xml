@@ -33,9 +33,9 @@ additional
         <bytedeco.version>1.5.10</bytedeco.version>
         <commons-compress.version>1.24.0</commons-compress.version>
         <log4j.version>2.21.0</log4j.version>
-        
+
         <lombok.version>1.18.32</lombok.version>
-        
+
         <!-- testing -->
         <junit.version>5.10.2</junit.version>
         <surefire-plugin.argLine>-Xmx384m</surefire-plugin.argLine>
@@ -119,7 +119,19 @@ additional
 
             <dependency>
                 <groupId>jcompute</groupId>
-                <artifactId>jcompute-opencl</artifactId>
+                <artifactId>jcompute-opencl-applib</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jcompute</groupId>
+                <artifactId>jcompute-opencl-bytedeco</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jcompute</groupId>
+                <artifactId>jcompute-opencl-jocl</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
             </dependency>
 
