@@ -28,7 +28,6 @@ import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.SizeTPointer;
 import org.bytedeco.opencl.global.OpenCL;
 
-import lombok.val;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -42,15 +41,13 @@ class _Util {
     }
 
     <T> T checkedApply(final Function<IntPointer, T> function, final Supplier<String> message) {
-        val ret_pointer = new IntPointer(1);
-        final T t = function.apply(ret_pointer);
-        final int ret = ret_pointer.get();
-        try {
+        try (var ret_pointer = new IntPointer(1)){
+            final T t = function.apply(ret_pointer);
+            final int ret = ret_pointer.get();
+
             _Util.assertSuccess(ret, message);
-        } finally {
-            Pointer.free(ret_pointer);
+            return t;
         }
-        return t;
     }
 
     // -- DYNAMIC READ
@@ -84,8 +81,11 @@ class _Util {
             function.accept(0, null, sizePointer);
             this.size = (int)sizePointer.get();
             this.data = new byte[size];
-            function.accept(size, new BytePointer(data), null);
-            return this;
+            try(var buffer = new BytePointer(size)) {
+                function.accept(size, buffer, null);
+                buffer.get(data, 0, size);
+                return this;
+            }
         }
         String asString() {
             return new String(data, 0, data.length - 1);
@@ -99,8 +99,11 @@ class _Util {
             function.accept(0, null, sizePointer);
             this.size = (int)sizePointer.get();
             this.data = new int[size];
-            function.accept(size, new IntPointer(data), null);
-            return this;
+            try(var buffer = new IntPointer(size)) {
+                function.accept(size, buffer, null);
+                buffer.get(data, 0, size);
+                return this;
+            }
         }
     }
     private static class DynamicLongReader {
@@ -111,8 +114,11 @@ class _Util {
             function.accept(0, null, sizePointer);
             this.size = (int)sizePointer.get();
             this.data = new long[size];
-            function.accept(size, new LongPointer(data), null);
-            return this;
+            try(var buffer = new LongPointer(size)) {
+                function.accept(size, buffer, null);
+                buffer.get(data, 0, size);
+                return this;
+            }
         }
     }
 

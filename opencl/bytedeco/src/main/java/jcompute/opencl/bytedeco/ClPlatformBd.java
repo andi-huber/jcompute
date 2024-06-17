@@ -22,10 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.PointerPointer;
-import org.bytedeco.javacpp.SizeTPointer;
 import org.bytedeco.opencl._cl_device_id;
 import org.bytedeco.opencl._cl_platform_id;
 import org.bytedeco.opencl.global.OpenCL;
@@ -58,14 +55,7 @@ public final class ClPlatformBd implements ClPlatform {
     // -- HELPER
 
     private static String getString(final _cl_platform_id platformId, final int paramName) {
-        val sizePointer = new SizeTPointer(1);
-        clGetPlatformInfo(platformId, paramName, 0, null, sizePointer);
-        final int size = (int)sizePointer.get();
-        val buffer = new BytePointer(size);
-        clGetPlatformInfo(platformId, paramName, size, buffer, null);
-        val result = new byte[size];
-        buffer.get(result);
-        return new String(result);
+        return _Util.readString((a, b, c)->clGetPlatformInfo(platformId, paramName, a, b, c));
     }
 
     private static List<ClDevice> listDevices(final ClPlatformBd platform) {
@@ -75,18 +65,17 @@ public final class ClPlatformBd implements ClPlatform {
         clGetDeviceIDs(platformId, CL_DEVICE_TYPE_ALL, 0, (PointerPointer<?>)null, numDevicesRef);
         final int deviceCount = numDevicesRef[0];
 
-        val deviceBuffer = new PointerPointer<_cl_device_id>(deviceCount);
-        clGetDeviceIDs(platformId, CL_DEVICE_TYPE_ALL, deviceCount, deviceBuffer, (int[])null);
+        try(val deviceBuffer = new PointerPointer<_cl_device_id>(deviceCount)) {
+            clGetDeviceIDs(platformId, CL_DEVICE_TYPE_ALL, deviceCount, deviceBuffer, (int[])null);
 
-        val devices = new ArrayList<ClDevice>(deviceCount);
-        for (int i = 0; i < deviceCount; i++) {
-            devices.add(
-                    new ClDeviceBd(new _cl_device_id(deviceBuffer.get(i)), platform, i));
+            val devices = new ArrayList<ClDevice>(deviceCount);
+            for (int i = 0; i < deviceCount; i++) {
+                devices.add(
+                        new ClDeviceBd(new _cl_device_id(deviceBuffer.get(i)), platform, i));
+            }
+
+            return Collections.unmodifiableList(devices);
         }
-
-        Pointer.free(deviceBuffer);
-
-        return Collections.unmodifiableList(devices);
     }
 
 }

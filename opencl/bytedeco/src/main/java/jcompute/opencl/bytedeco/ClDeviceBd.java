@@ -20,10 +20,6 @@ package jcompute.opencl.bytedeco;
 
 import java.util.List;
 
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.javacpp.IntPointer;
-import org.bytedeco.javacpp.LongPointer;
-import org.bytedeco.javacpp.SizeTPointer;
 import org.bytedeco.opencl._cl_device_id;
 import org.bytedeco.opencl.global.OpenCL;
 
@@ -58,7 +54,7 @@ public final class ClDeviceBd extends ClDevice {
     @Override
     public ClContext createContext() {
         val contextId = _Util.checkedApply(ret_pointer->
-                OpenCL.clCreateContext(null, 1, id(), null, null, ret_pointer),
+                OpenCL.clCreateContext(null, 1, id, null, null, ret_pointer),
                 ()->String.format("failed to create context for device %s", this.getName()));
         return new ClContextBd(contextId, List.of(this));
     }
@@ -96,14 +92,7 @@ public final class ClDeviceBd extends ClDevice {
     // -- HELPER
 
     private static String getString(final _cl_device_id deviceId, final int paramName) {
-        val sizePointer = new SizeTPointer(1);
-        clGetDeviceInfo(deviceId, paramName, 0, null, sizePointer);
-        final int size = (int)sizePointer.get();
-        val buffer = new BytePointer(size);
-        clGetDeviceInfo(deviceId, paramName, size, buffer, null);
-        val result = new byte[size];
-        buffer.get(result);
-        return new String(result).trim();
+        return _Util.readString((a, b, c)->clGetDeviceInfo(deviceId, paramName, a, b, c)).trim();
     }
 
     private static long getLong(final _cl_device_id deviceId, final int paramName) {
@@ -111,14 +100,7 @@ public final class ClDeviceBd extends ClDevice {
     }
 
     private static long[] getLongs(final _cl_device_id deviceId, final int paramName, final int numValues) {
-        val sizePointer = new SizeTPointer(1);
-        clGetDeviceInfo(deviceId, paramName, 0, null, sizePointer);
-        final int size = (int)sizePointer.get();
-        val buffer = new LongPointer(size);
-        clGetDeviceInfo(deviceId, paramName, size, buffer, null);
-        val result = new long[numValues];
-        buffer.get(result, 0, numValues);
-        return result;
+        return _Util.readLongs((a, b, c)->clGetDeviceInfo(deviceId, paramName, a, b, c));
     }
 
     private static int getInt(final _cl_device_id deviceId, final int paramName) {
@@ -126,14 +108,7 @@ public final class ClDeviceBd extends ClDevice {
     }
 
     private static int[] getInts(final _cl_device_id deviceId, final int paramName, final int numValues) {
-        val sizePointer = new SizeTPointer(1);
-        clGetDeviceInfo(deviceId, paramName, 0, null, sizePointer);
-        final int size = (int)sizePointer.get();
-        val buffer = new IntPointer(size);
-        clGetDeviceInfo(deviceId, paramName, size, buffer, null);
-        val result = new int[numValues];
-        buffer.get(result, 0, numValues);
-        return result;
+        return _Util.readInts((a, b, c)->clGetDeviceInfo(deviceId, paramName, a, b, c));
     }
 
     private static DeviceType fromClDeviceType(final int cl_device_type) {
