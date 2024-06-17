@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.bytedeco.javacpp.IntPointer;
-import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.PointerPointer;
 import org.bytedeco.opencl._cl_platform_id;
 
@@ -58,33 +56,32 @@ public final class BindingProviderBd implements OpenCLBindingProvider {
     /**
      * Lists all available OpenCL implementations.
      */
-    public static List<ClPlatform> createPlatforms() {
+    private static List<ClPlatform> createPlatforms() {
 
-        val outPlatformCount = new IntPointer(1);
+        var outPlatformCount = new int[1];
 
         // count available OpenCL platforms
         _Util.assertSuccess(
                 clGetPlatformIDs(0, (PointerPointer<?>)null, outPlatformCount),
                 ()->"failed to call clGetPlatformIDs");
 
-        final int platformCount = outPlatformCount.get();
-        val platformBuffer = new PointerPointer<_cl_platform_id>(platformCount);
+        final int platformCount = outPlatformCount[0];
 
-        // fetch available OpenCL platforms
-        _Util.assertSuccess(
-                clGetPlatformIDs(platformCount, platformBuffer, (IntPointer)null),
-                ()->"failed to call clGetPlatformIDs");
+        try(var pointer = new PointerPointer<_cl_platform_id>(platformCount)) {
 
-        val platforms = new ArrayList<ClPlatform>(platformCount);
-        for (int i = 0; i < platformCount; i++) {
-            platforms.add(
-                    new ClPlatformBd(i, new _cl_platform_id(platformBuffer.get(i))));
+            // fetch available OpenCL platforms
+            _Util.assertSuccess(
+                    clGetPlatformIDs(platformCount, pointer, (int[])null),
+                    ()->"failed to call clGetPlatformIDs");
+
+            val platforms = new ArrayList<ClPlatform>(platformCount);
+            for (int i = 0; i < platformCount; i++) {
+                platforms.add(
+                        new ClPlatformBd(i, new _cl_platform_id(pointer.get(i))));
+            }
+
+            return Collections.unmodifiableList(platforms);
         }
-
-        Pointer.free(platformBuffer);
-
-        return Collections.unmodifiableList(platforms);
     }
-
 
 }
