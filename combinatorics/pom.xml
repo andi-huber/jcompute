@@ -55,6 +55,16 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        
+        <!-- TESTING -->
+
+        <!-- arbitrary choice of binding -->
+        <dependency>
+            <groupId>jcompute</groupId>
+            <artifactId>jcompute-opencl-bytedeco</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
