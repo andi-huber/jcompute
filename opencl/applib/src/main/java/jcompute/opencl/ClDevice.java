@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
+
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class ClDevice {
@@ -49,7 +49,7 @@ public abstract class ClDevice {
     }
 
     public static ClDevice getBest(final Comparator<ClDevice> deviceComparator) {
-        val best = new ClDevice[] {null};
+        var best = new ClDevice[] {null};
         return streamAll()
                 .reduce(best[0], (a, b)->deviceComparator.compare(a, b)>=0 ? a : b);
     }

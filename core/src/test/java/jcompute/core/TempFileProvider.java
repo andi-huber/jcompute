@@ -26,9 +26,10 @@ import java.io.OutputStream;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import lombok.SneakyThrows;
+
 import jcompute.core.util.function.throwing.ThrowingConsumer;
 import jcompute.core.util.function.throwing.ThrowingFunction;
-import lombok.SneakyThrows;
 
 public class TempFileProvider implements AutoCloseable, Supplier<File> {
 

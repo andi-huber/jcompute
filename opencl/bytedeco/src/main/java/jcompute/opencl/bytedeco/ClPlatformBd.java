@@ -32,7 +32,6 @@ import static org.bytedeco.opencl.global.OpenCL.clGetDeviceIDs;
 import static org.bytedeco.opencl.global.OpenCL.clGetPlatformInfo;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.opencl.ClDevice;
@@ -59,16 +58,16 @@ public final class ClPlatformBd implements ClPlatform {
     }
 
     private static List<ClDevice> listDevices(final ClPlatformBd platform) {
-        val platformId = platform.id();
+        var platformId = platform.id();
         // Obtain the number of devices for the platform
         final int[] numDevicesRef = new int[1];
         clGetDeviceIDs(platformId, CL_DEVICE_TYPE_ALL, 0, (PointerPointer<?>)null, numDevicesRef);
         final int deviceCount = numDevicesRef[0];
 
-        try(val deviceBuffer = new PointerPointer<_cl_device_id>(deviceCount)) {
+        try(var deviceBuffer = new PointerPointer<_cl_device_id>(deviceCount)) {
             clGetDeviceIDs(platformId, CL_DEVICE_TYPE_ALL, deviceCount, deviceBuffer, (int[])null);
 
-            val devices = new ArrayList<ClDevice>(deviceCount);
+            var devices = new ArrayList<ClDevice>(deviceCount);
             for (int i = 0; i < deviceCount; i++) {
                 devices.add(
                         new ClDeviceBd(new _cl_device_id(deviceBuffer.get(i)), platform, i));

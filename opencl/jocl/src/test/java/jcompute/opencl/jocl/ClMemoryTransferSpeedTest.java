@@ -25,8 +25,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import lombok.val;
-
 import jcompute.core.mem.LongArray;
 import jcompute.core.shape.Shape;
 import jcompute.core.timing.Timing;
@@ -69,19 +67,19 @@ class ClMemoryTransferSpeedTest {
                 System.err.printf("running inc on %s ...%n", cl);
 
                 // Create Command Queue
-                val queue = cl.createQueue();
+                var queue = cl.createQueue();
                 System.err.printf("  + queue created%n");
 
                 // Create Kernel program from the read in source
-                val program = cl.createProgram(INC_SRC);
+                var program = cl.createProgram(INC_SRC);
                 System.err.printf("  + program created%n");
 
                 // Create OpenCL Kernel
-                val kernel = program.createKernel("inc");
+                var kernel = program.createKernel("inc");
                 System.err.printf("  + kernel created%n");
 
                 // Create memory buffer
-                val memObj = cl.createMemoryReadWrite(mem);
+                var memObj = cl.createMemoryReadWrite(mem);
                 System.err.printf("  + mem buf created%n");
 
                 // Set OpenCL kernel argument

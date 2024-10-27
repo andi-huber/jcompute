@@ -28,7 +28,6 @@ import org.bytedeco.opencl._cl_platform_id;
 import static org.bytedeco.opencl.global.OpenCL.clGetPlatformIDs;
 
 import lombok.Getter;
-import lombok.val;
 
 import jcompute.opencl.ClBinding;
 import jcompute.opencl.ClPlatform;
@@ -74,7 +73,7 @@ public final class BindingProviderBd implements OpenCLBindingProvider {
                     clGetPlatformIDs(platformCount, pointer, (int[])null),
                     ()->"failed to call clGetPlatformIDs");
 
-            val platforms = new ArrayList<ClPlatform>(platformCount);
+            var platforms = new ArrayList<ClPlatform>(platformCount);
             for (int i = 0; i < platformCount; i++) {
                 platforms.add(
                         new ClPlatformBd(i, new _cl_platform_id(pointer.get(i))));

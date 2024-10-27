@@ -18,12 +18,12 @@
  */
 package jcompute.combinatorics.setcover;
 
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.UtilityClass;
+
 import jcompute.core.mem.ByteArray;
 import jcompute.core.mem.LongArray;
 import jcompute.opencl.ClDevice;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class SetCoverKernels {
@@ -94,17 +94,17 @@ public class SetCoverKernels {
         """;
 
         public void run() {
-            try (val context = device.createContext()) {
+            try (var context = device.createContext()) {
 
-                val queue = context.createQueue();
+                var queue = context.createQueue();
 
-                val program = context.createProgram(setCoverKernelSource);
+                var program = context.createProgram(setCoverKernelSource);
 
-                val kernel = program.createKernel("cover64");
+                var kernel = program.createKernel("cover64");
 
-                val memA = context.createMemoryReadOnly(params.pSets());
-                val memB = context.createMemoryReadOnly(params.kSets());
-                val memC = context.createMemoryWriteOnly(covered);
+                var memA = context.createMemoryReadOnly(params.pSets());
+                var memB = context.createMemoryReadOnly(params.kSets());
+                var memC = context.createMemoryWriteOnly(covered);
 
                 kernel.setArgs(memA, memB, memC,
                         (int)memA.size(),

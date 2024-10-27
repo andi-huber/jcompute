@@ -22,7 +22,6 @@ import org.bytedeco.opencl._cl_program;
 import org.bytedeco.opencl.global.OpenCL;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.opencl.ClContext;
@@ -45,7 +44,7 @@ public final class ClProgramBd extends ClProgram {
      */
     @Override
     public ClProgram build()  {
-        val deviceId = ((ClDeviceBd)getContext().getSingleDeviceElseFail()).id();
+        var deviceId = ((ClDeviceBd)getContext().getSingleDeviceElseFail()).id();
 
         // https://www.intel.com/content/www/us/en/docs/opencl-sdk/developer-reference-processor-graphics/2015-1/optimization-options.html
         String options = null; // all enabled by default
@@ -70,7 +69,7 @@ public final class ClProgramBd extends ClProgram {
 
     @Override
     protected ClKernel createKernelInternal(final String kernelName) {
-        val kernelId = _Util.checkedApply(ret_pointer->
+        var kernelId = _Util.checkedApply(ret_pointer->
                 OpenCL.clCreateKernel(this.id(), kernelName, ret_pointer),
                 ()->String.format("failed to create kernel '%s' for program %s", kernelName, this));
         return new ClKernelBd(kernelId, this, kernelName);
@@ -79,7 +78,7 @@ public final class ClProgramBd extends ClProgram {
     // -- HELPER
 
     private String getBuildProgramInfo(final int paramName) {
-        val deviceId = ((ClDeviceBd)getContext().getSingleDeviceElseFail()).id();
+        var deviceId = ((ClDeviceBd)getContext().getSingleDeviceElseFail()).id();
         return _Util.readString((a, b, c)->OpenCL.clGetProgramBuildInfo(id(), deviceId, paramName, a, b, c));
     }
 

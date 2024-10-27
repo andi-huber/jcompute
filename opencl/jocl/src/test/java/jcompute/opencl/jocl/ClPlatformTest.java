@@ -26,8 +26,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import lombok.val;
-
 import jcompute.opencl.ClDevice;
 import jcompute.opencl.ClDevice.DeviceType;
 import jcompute.opencl.ClPlatform;
@@ -36,14 +34,14 @@ class ClPlatformTest {
 
     @Test
     void platform() {
-        val clPlatforms = ClPlatform.listPlatforms();
+        var clPlatforms = ClPlatform.listPlatforms();
         assertTrue(clPlatforms.size()>0);
         System.err.printf("NumberOfPlatforms: %d%n", clPlatforms.size());
     }
 
     @Test
     void device() {
-        val clPlatforms = ClPlatform.listPlatforms();
+        var clPlatforms = ClPlatform.listPlatforms();
         clPlatforms.forEach(platform->{
             System.err.printf("Platform: %s%n", platform.getPlatformVersion());
 
@@ -63,7 +61,7 @@ class ClPlatformTest {
 
     @Test
     void defaultDevice() {
-        val device = ClDevice.getDefault();
+        var device = ClDevice.getDefault();
         assertEquals(DeviceType.GPU, device.getType());
     }
 

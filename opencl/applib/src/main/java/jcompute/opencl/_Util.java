@@ -24,7 +24,6 @@ import java.util.Scanner;
 import java.util.function.Supplier;
 
 import lombok.NonNull;
-import lombok.val;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -52,10 +51,10 @@ class _Util {
 
 
     ClPreferredDeviceComparator getDefaultClPreferredDeviceComparator() {
-        val className = System.getenv("DefaultClPreferredDeviceComparator");
+        var className = System.getenv("DefaultClPreferredDeviceComparator");
         if(isNotEmpty(className)) {
             try {
-                val cls = _Util.class.getClassLoader().loadClass(className);
+                var cls = _Util.class.getClassLoader().loadClass(className);
                 if(ClPreferredDeviceComparator.class.isAssignableFrom(cls)) {
                     return (ClPreferredDeviceComparator)
                             cls.getConstructor(EMPTY_CLASSES).newInstance(EMPTY_OBJECTS);

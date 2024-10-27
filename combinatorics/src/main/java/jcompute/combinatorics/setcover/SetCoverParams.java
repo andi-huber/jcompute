@@ -23,7 +23,7 @@ import java.lang.foreign.Arena;
 import jcompute.combinatorics.base.Combinations;
 import jcompute.core.mem.LongArray;
 import jcompute.core.shape.Shape;
-import lombok.val;
+
 
 public record SetCoverParams(
         int v,
@@ -53,7 +53,7 @@ public record SetCoverParams(
     private static LongArray pSets(final Arena arena, final int v, final int m) {
         final long size = Combinations.binomialAsLongValueExact(v, m);
         var shape = Shape.of(size);
-        val pSets = LongArray.of(arena, shape);
+        var pSets = LongArray.of(arena, shape);
         long colex = (1L << m) - 1;
         for (long gid = 0; gid < size; gid++) {
             pSets.put(gid, colex);

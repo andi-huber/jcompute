@@ -25,7 +25,6 @@ import org.jocl.cl_context;
 import org.jocl.cl_queue_properties;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.core.mem.JComputeArray;
@@ -48,8 +47,8 @@ public final class ClContextJocl extends ClContext {
     @Override
     protected ClCommandQueue createQueueInternal() {
         final ClContextJocl context = this;
-        val deviceId = ((ClDeviceJocl)context.getSingleDeviceElseFail()).id();
-        val queueId = _Util.checkedApply(ret_pointer->
+        var deviceId = ((ClDeviceJocl)context.getSingleDeviceElseFail()).id();
+        var queueId = _Util.checkedApply(ret_pointer->
             CL.clCreateCommandQueueWithProperties(
                 context.id(),
                 deviceId,
@@ -63,7 +62,7 @@ public final class ClContextJocl extends ClContext {
 
     @Override
     protected ClProgram createProgramInternal(final String programSource) {
-        val programId = _Util.checkedApply(ret_pointer->
+        var programId = _Util.checkedApply(ret_pointer->
             CL.clCreateProgramWithSource(this.id(), 1, new String[]{programSource}, null, ret_pointer),
             ()-> String.format("failed to create program for context %s", this));
         return new ClProgramJocl(programId, this).build();

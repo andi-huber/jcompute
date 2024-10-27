@@ -26,7 +26,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.core.mem.JComputeArray;
@@ -92,8 +91,8 @@ public abstract class ClContext implements AutoCloseable {
 
     @SneakyThrows
     public final ClProgram createProgram(final Class<?> cls, final String resourceName) {
-        try(val is = cls.getResourceAsStream(resourceName)){
-            val source = _Util.read(is, StandardCharsets.UTF_8);
+        try(var is = cls.getResourceAsStream(resourceName)){
+            var source = _Util.read(is, StandardCharsets.UTF_8);
             return createProgram(source);
         }
     }

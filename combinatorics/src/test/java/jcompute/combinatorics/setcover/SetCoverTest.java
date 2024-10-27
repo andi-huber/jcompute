@@ -26,12 +26,13 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import lombok.SneakyThrows;
+
 import jcompute.core.io.Compressor;
 import jcompute.core.mem.ByteArray;
 import jcompute.core.mem.LongArray;
 import jcompute.core.timing.Timing;
 import jcompute.opencl.ClDevice;
-import lombok.SneakyThrows;
 
 class SetCoverTest {
 

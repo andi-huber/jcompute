@@ -27,7 +27,6 @@ import org.jocl.cl_platform_id;
 import static org.jocl.CL.clGetPlatformIDs;
 
 import lombok.Getter;
-import lombok.val;
 
 import jcompute.opencl.ClBinding;
 import jcompute.opencl.ClPlatform;
@@ -57,21 +56,21 @@ public final class BindingProviderJocl implements OpenCLBindingProvider {
      */
     private static List<ClPlatform> createPlatforms() {
 
-        val outPlatformCount = new int[1];
+        var outPlatformCount = new int[1];
         // count available OpenCL platforms
         _Util.assertSuccess(
                 clGetPlatformIDs(0, null, outPlatformCount),
                 ()->"failed to call clGetPlatformIDs");
 
         final int platformCount = outPlatformCount[0];
-        val platformBuffer = new cl_platform_id[platformCount];
+        var platformBuffer = new cl_platform_id[platformCount];
 
         // fetch available OpenCL platforms
         _Util.assertSuccess(
                 clGetPlatformIDs(platformCount, platformBuffer, null),
                 ()->"failed to call clGetPlatformIDs");
 
-        val platforms = new ArrayList<ClPlatformJocl>(platformCount);
+        var platforms = new ArrayList<ClPlatformJocl>(platformCount);
         for (int i = 0; i < platformCount; i++) {
             platforms.add(
                     new ClPlatformJocl(i, platformBuffer[i]));

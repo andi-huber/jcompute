@@ -26,7 +26,6 @@ import org.bytedeco.opencl.global.OpenCL;
 import static org.bytedeco.opencl.global.OpenCL.clGetDeviceInfo;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.opencl.ClContext;
@@ -53,7 +52,7 @@ public final class ClDeviceBd extends ClDevice {
      */
     @Override
     public ClContext createContext() {
-        val contextId = _Util.checkedApply(ret_pointer->
+        var contextId = _Util.checkedApply(ret_pointer->
                 OpenCL.clCreateContext(null, 1, id, null, null, ret_pointer),
                 ()->String.format("failed to create context for device %s", this.getName()));
         return new ClContextBd(contextId, List.of(this));

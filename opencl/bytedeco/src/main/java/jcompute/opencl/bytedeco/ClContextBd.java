@@ -27,7 +27,6 @@ import org.bytedeco.opencl._cl_context;
 import org.bytedeco.opencl.global.OpenCL;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.core.mem.JComputeArray;
@@ -50,14 +49,14 @@ public final class ClContextBd extends ClContext {
     @Override
     protected ClCommandQueue createQueueInternal() {
         final ClContextBd context = this;
-        val deviceId = ((ClDeviceBd)context.getSingleDeviceElseFail()).id();
-        val properties = new LongPointer(new long[] {
+        var deviceId = ((ClDeviceBd)context.getSingleDeviceElseFail()).id();
+        var properties = new LongPointer(new long[] {
 //              OpenCL.CL_QUEUE_PROPERTIES,
 //              | OpenCL.CL_QUEUE_ON_DEVICE
 //              | OpenCL.CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE,
               0}); // zero terminated list of queue creation properties
       // https://registry.khronos.org/OpenCL/sdk/3.0/docs/man/html/clCreateCommandQueueWithProperties.html
-        val queueId = _Util.checkedApply(ret_pointer->
+        var queueId = _Util.checkedApply(ret_pointer->
             OpenCL.clCreateCommandQueueWithProperties(
                 context.id(),
                 deviceId,
@@ -71,7 +70,7 @@ public final class ClContextBd extends ClContext {
     protected ClProgram createProgramInternal(final String programSource) {
         try(var sizeTPtr = new SizeTPointer(1); var src = new PointerPointer<>(programSource)){
             sizeTPtr.put(programSource.length());
-            val programId = _Util.checkedApply(ret_pointer->
+            var programId = _Util.checkedApply(ret_pointer->
                 OpenCL.clCreateProgramWithSource(this.id(), 1, src, sizeTPtr, ret_pointer),
                 ()-> String.format("failed to create program for context %s", this));
             return new ClProgramBd(programId, this).build();

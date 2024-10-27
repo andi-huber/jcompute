@@ -24,7 +24,6 @@ import org.jocl.CL;
 import org.jocl.cl_device_id;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.opencl.ClContext;
@@ -50,7 +49,7 @@ public final class ClDeviceJocl extends ClDevice {
      */
     @Override
     public ClContext createContext() {
-        val contextId = _Util.checkedApply(ret_pointer->
+        var contextId = _Util.checkedApply(ret_pointer->
                 CL.clCreateContext(null, 1, new cl_device_id[]{this.id()}, null, null, ret_pointer),
                 ()->String.format("failed to create context for device %s", this.getName()));
         return new ClContextJocl(contextId, List.of(this));

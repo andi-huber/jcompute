@@ -30,7 +30,6 @@ import static org.jocl.CL.clGetDeviceIDs;
 import static org.jocl.CL.clGetPlatformInfo;
 
 import lombok.Getter;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 import jcompute.opencl.ClDevice;
@@ -57,16 +56,16 @@ public final class ClPlatformJocl implements ClPlatform {
     }
 
     private static List<ClDevice> listDevices(final ClPlatformJocl platform) {
-        val platformId = platform.id();
+        var platformId = platform.id();
         // Obtain the number of devices for the platform
         final int[] numDevicesRef = new int[1];
         clGetDeviceIDs(platformId, CL.CL_DEVICE_TYPE_ALL, 0, null, numDevicesRef);
         final int deviceCount = numDevicesRef[0];
 
-        val deviceIds = new cl_device_id[deviceCount];
+        var deviceIds = new cl_device_id[deviceCount];
         clGetDeviceIDs(platformId, CL.CL_DEVICE_TYPE_ALL, deviceCount, deviceIds, (int[])null);
 
-        val devices = new ArrayList<ClDevice>(deviceCount);
+        var devices = new ArrayList<ClDevice>(deviceCount);
         for (int i = 0; i < deviceCount; i++) {
             devices.add(
                     new ClDeviceJocl(deviceIds[i], platform, i));

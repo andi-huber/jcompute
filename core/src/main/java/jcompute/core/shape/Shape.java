@@ -24,10 +24,11 @@ import java.io.Serializable;
 import java.util.function.LongConsumer;
 import java.util.stream.LongStream;
 
+import lombok.SneakyThrows;
+
 import jcompute.core.util.function.BiLongConsumer;
 import jcompute.core.util.function.TriLongConsumer;
 import jcompute.core.util.primitive.LongUtils.LongExternalizer;
-import lombok.SneakyThrows;
 
 /**
  * Tuple of long, where the elements give the lengths of the corresponding array dimensions.

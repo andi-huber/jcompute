@@ -29,8 +29,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import lombok.val;
-
 import jcompute.core.mem.LongArray;
 import jcompute.core.shape.Shape;
 import jcompute.core.timing.Timing;
@@ -128,8 +126,8 @@ class MemoryTransferSpeedTest {
     @Test
     void arena() throws IOException {
         try (Arena arena = Arena.ofConfined()) {
-            val layout = MemoryLayout.sequenceLayout(N, ValueLayout.JAVA_LONG);
-            val mem = arena.allocate(layout);
+            var layout = MemoryLayout.sequenceLayout(N, ValueLayout.JAVA_LONG);
+            var mem = arena.allocate(layout);
             Timing.run("arena", ()->{
                 IntStream.range(0, N)
                     .forEach(gid->mem.setAtIndex(ValueLayout.JAVA_LONG, gid, gid));

@@ -26,8 +26,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import lombok.val;
-
 import jcompute.core.mem.DoubleArray;
 import jcompute.core.shape.Shape;
 import jcompute.opencl.ClDevice;
@@ -74,19 +72,19 @@ class ClKernelTest {
             mem.shape().forEach(gid->mem.put(gid, gid));
 
             /* Create OpenCL Context */
-            try(val context = device.createContext()) {
+            try(var context = device.createContext()) {
 
                 /* Create Command Queue */
-                val queue = context.createQueue();
+                var queue = context.createQueue();
 
                 /* Create Kernel program from the read in source */
-                val program = context.createProgram(VEC_ADD_SRC);
+                var program = context.createProgram(VEC_ADD_SRC);
 
                 /* Create OpenCL Kernel */
-                val kernel = program.createKernel("vecAdd");
+                var kernel = program.createKernel("vecAdd");
 
                 /* Create memory buffer*/
-                val memObj = context.createMemoryReadWrite(mem);
+                var memObj = context.createMemoryReadWrite(mem);
 
                 /* Set OpenCL kernel argument */
                 kernel.setArgs(memObj);

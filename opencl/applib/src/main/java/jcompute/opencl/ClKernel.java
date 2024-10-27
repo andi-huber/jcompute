@@ -21,7 +21,6 @@ package jcompute.opencl;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import lombok.experimental.Accessors;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
@@ -51,7 +50,7 @@ public abstract class ClKernel implements ClResource {
 
     public final ClKernel setArgs(final Object... args) {
         for (int i = 0; i < args.length; i++) {
-            val value = args[i];
+            var value = args[i];
             if(value instanceof ClMem clMem) {
                 setArg(i, clMem);
             } else if(value instanceof Integer v) {
