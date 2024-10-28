@@ -24,7 +24,6 @@ import jcompute.combinatorics.base.Combinations;
 import jcompute.core.mem.LongArray;
 import jcompute.core.shape.Shape;
 
-
 public record SetCoverParams(
         int v,
         int m,

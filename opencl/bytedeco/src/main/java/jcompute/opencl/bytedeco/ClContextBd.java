@@ -107,5 +107,4 @@ public final class ClContextBd extends ClContext {
         return new ClMemBd(memId, this, computeArray);
     }
 
-
 }

@@ -79,5 +79,4 @@ public final class BindingProviderJocl implements OpenCLBindingProvider {
         return Collections.unmodifiableList(platforms);
     }
 
-
 }

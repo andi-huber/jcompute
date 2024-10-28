@@ -71,7 +71,6 @@ class ClMemoryTransferSpeedTest2 {
                 mem.fill(gid->gid);
             });
 
-
             {
                 System.err.printf("running inc on %s ...%n", cl);
 

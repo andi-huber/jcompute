@@ -144,6 +144,4 @@ public class Timing {
         return result;
     }
 
-
-
 }

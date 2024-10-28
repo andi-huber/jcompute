@@ -112,5 +112,4 @@ public final class ClKernelBd extends ClKernel {
         return kernel;
     }
 
-
 }

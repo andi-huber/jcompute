@@ -56,7 +56,6 @@ class LongArrayTest {
             var rand = new Random(1234);
             mem.fill(__->rand.nextLong(1024)); // limit the domain, so compression can have an effect
 
-
             try(var tempFile = new TempFileProvider(this.getClass())){
 
                 tempFile.write(os->

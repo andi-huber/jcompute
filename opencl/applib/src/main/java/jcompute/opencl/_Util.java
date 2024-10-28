@@ -49,7 +49,6 @@ class _Util {
                 && s.length()>0;
     }
 
-
     ClPreferredDeviceComparator getDefaultClPreferredDeviceComparator() {
         var className = System.getenv("DefaultClPreferredDeviceComparator");
         if(isNotEmpty(className)) {

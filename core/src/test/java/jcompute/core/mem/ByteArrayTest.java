@@ -56,7 +56,6 @@ class ByteArrayTest {
             var rand = new Random(1234);
             mem.fill(__->(byte)rand.nextInt(64)); // limit the domain, so compression can have an effect
 
-
             try(var tempFile = new TempFileProvider(this.getClass())){
 
                 tempFile.write(os->
@@ -72,6 +71,5 @@ class ByteArrayTest {
         }
 
     }
-
 
 }
