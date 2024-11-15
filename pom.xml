@@ -27,14 +27,14 @@ additional
     <packaging>pom</packaging>
 
     <properties>
-        <maven.compiler.release>22</maven.compiler.release>
+        <maven.compiler.release>23</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <bytedeco.version>1.5.10</bytedeco.version>
         <commons-compress.version>1.26.2</commons-compress.version>
         <log4j.version>2.21.0</log4j.version>
 
-        <lombok.version>1.18.34</lombok.version>
+        <lombok.version>1.18.36</lombok.version>
 
         <!-- testing -->
         <junit.version>5.10.2</junit.version>
