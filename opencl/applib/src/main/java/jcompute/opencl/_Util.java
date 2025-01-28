@@ -23,7 +23,7 @@ import java.nio.charset.Charset;
 import java.util.Scanner;
 import java.util.function.Supplier;
 
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
