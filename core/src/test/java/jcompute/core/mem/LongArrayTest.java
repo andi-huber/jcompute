@@ -54,7 +54,7 @@ class LongArrayTest {
             var mem = LongArray.of(arena, Shape.of(256, 256));
 
             var rand = new Random(1234);
-            mem.fill(__->rand.nextLong(1024)); // limit the domain, so compression can have an effect
+            mem.fill(_->rand.nextLong(1024)); // limit the domain, so compression can have an effect
 
             try(var tempFile = new TempFileProvider(this.getClass())){
 

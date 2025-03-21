@@ -54,7 +54,7 @@ class ByteArrayTest {
             var mem = ByteArray.of(arena, Shape.of(256, 256));
 
             var rand = new Random(1234);
-            mem.fill(__->(byte)rand.nextInt(64)); // limit the domain, so compression can have an effect
+            mem.fill(_->(byte)rand.nextInt(64)); // limit the domain, so compression can have an effect
 
             try(var tempFile = new TempFileProvider(this.getClass())){
 

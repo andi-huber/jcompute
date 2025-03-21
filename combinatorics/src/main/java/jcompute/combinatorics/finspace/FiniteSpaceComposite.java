@@ -1,0 +1,70 @@
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
+package jcompute.combinatorics.finspace;
+
+import java.math.BigInteger;
+import java.util.Optional;
+import java.util.function.IntFunction;
+import java.util.stream.Stream;
+
+import jcompute.core.util.function.MultiIntConsumer;
+import jcompute.core.util.function.MultiIntPredicate;
+import jcompute.core.util.function.PrefixedMultiIntConsumer;
+
+//experimental
+record FiniteSpaceComposite(FiniteSpace a, FiniteSpace b) implements FiniteSpace {
+
+    @Override public int dimensionCount() { return a.dimensionCount() + b.dimensionCount(); }
+    @Override public BigInteger cardinality() {
+        return a.cardinality()
+            .multiply(b.cardinality());
+    }
+
+    @Override
+    public void reportDimensionSizes(final MultiIntConsumer intConsumer) {
+        var v = new int[dimensionCount()];
+        a.reportDimensionSizes(r->System.arraycopy(r, 0, v, 0, r.length));
+        b.reportDimensionSizes(r->System.arraycopy(r, 0, v, a.dimensionCount(), r.length));
+        intConsumer.accept(v);
+    }
+
+    @Override
+    public void forEach(final Visiting visiting, final MultiIntConsumer intConsumer) {
+        a.forEach(visiting, va->{
+            var v = new int[dimensionCount()];
+            System.arraycopy(va, 0, v, 0, va.length);
+            b.forEach(Visiting.SEQUENTIAL, vb->{
+                System.arraycopy(vb, 0, v, va.length, vb.length); // this hurts performance
+                intConsumer.accept(v);
+            });
+        });
+    }
+
+    @Override
+    public <T> Stream<T> streamCollectors(final IntFunction<T> collectorFactory,
+        final PrefixedMultiIntConsumer<T> prefixedIntConsumer) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Optional<int[]> findAny(final MultiIntPredicate intPredicate) {
+        throw new UnsupportedOperationException();
+    }
+
+}

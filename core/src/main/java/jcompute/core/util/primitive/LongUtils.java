@@ -73,6 +73,7 @@ public class LongUtils {
             }
         }
 
+        @SuppressWarnings("unused")
         @SneakyThrows
         public void transfer(final long size, final InputStream in, final LongBulkConsumer out) {
             transfer(size, (long[] values, int offset, int length)->{
@@ -84,6 +85,7 @@ public class LongUtils {
                 fromBytes(length, byteArray, longArray);
             }, out);
         }
+        @SuppressWarnings("unused")
         @SneakyThrows
         public void transfer(final long size, final LongBulkConsumer in, final OutputStream out) {
             transfer(size, in, (long[] values, int offset, int length)->{
