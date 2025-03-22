@@ -67,4 +67,9 @@ record CartesianProductComposite(CartesianProduct a, CartesianProduct b) impleme
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public Stream<int[]> stream(final Visiting visiting) {
+        throw new UnsupportedOperationException();
+    }
+
 }

@@ -43,6 +43,11 @@ public record CartesianProduct0() implements CartesianProduct {
     }
 
     @Override
+    public Stream<int[]> stream(final Visiting visiting) {
+        return Stream.empty();
+    }
+
+    @Override
     public <T> Stream<T> streamCollectors(final IntFunction<T> collectorFactory, final PrefixedMultiIntConsumer<T> prefixedIntConsumer) {
         return Stream.empty();
     }

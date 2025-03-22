@@ -21,6 +21,7 @@ package jcompute.combinatorics.product;
 import java.math.BigInteger;
 import java.util.Optional;
 import java.util.function.IntFunction;
+import java.util.stream.Gatherer;
 import java.util.stream.Stream;
 
 import jcompute.core.util.function.MultiIntConsumer;
@@ -42,6 +43,13 @@ public record CartesianProduct1(int n0) implements CartesianProduct {
         visiting.range(n0).forEach(i->{
             intConsumer.accept(i);
         });
+    }
+
+    @Override
+    public Stream<int[]> stream(final Visiting visiting) {
+        return visiting.range(n0)
+            .mapToObj(Integer::valueOf)
+            .gather(Gatherer.of(new Integrators.Integrator1()));
     }
 
     @Override

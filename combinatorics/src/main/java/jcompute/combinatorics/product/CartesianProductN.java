@@ -21,8 +21,12 @@ package jcompute.combinatorics.product;
 import java.math.BigInteger;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.IntFunction;
+import java.util.stream.Gatherer;
+import java.util.stream.Gatherer.Downstream;
+import java.util.stream.Gatherer.Integrator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -54,6 +58,13 @@ public record CartesianProductN(int ...dim) implements CartesianProduct {
     }
 
     @Override
+    public Stream<int[]> stream(final Visiting visiting) {
+        return visiting.range(dim[0])
+            .mapToObj(Integer::valueOf)
+            .gather(Gatherer.of(new IntegratorN(dim)));
+    }
+
+    @Override
     public <T> Stream<T> streamCollectors(final IntFunction<T> collectorFactory, final PrefixedMultiIntConsumer<T> prefixedIntConsumer) {
         return Visiting.PARALLEL.range(dim[0]).mapToObj(i->{
             var t = collectorFactory.apply(i);
@@ -80,6 +91,19 @@ public record CartesianProductN(int ...dim) implements CartesianProduct {
     }
 
     // -- HELPER
+
+    private record IntegratorN(int ...dim)
+    implements Integrator<Void, Integer, int[]> {
+        @Override
+        public boolean integrate(final Void state, final Integer i, final Downstream<? super int[]> downstream) {
+            final MultiIntPredicate mip = downstream::push;
+            final AtomicBoolean stop = new AtomicBoolean();
+            var v = new int[dim.length];
+            v[0] = i;
+            new RecursiveWhile(dim, v, mip::test, stop).recur(1);
+            return !stop.get();
+        }
+    }
 
     private record RecursiveVisitor(int[] dim, int[] v, MultiIntConsumer intConsumer) {
         void recur(final int dimIndex){
@@ -121,5 +145,21 @@ public record CartesianProductN(int ...dim) implements CartesianProduct {
             }
         }
     }
+
+    private record RecursiveWhile(int[] dim, int[] v, MultiIntPredicate condition, AtomicBoolean stop) {
+        void recur(final int dimIndex){
+            if(dimIndex == v.length) {
+                if(!condition.test(v)) {
+                    stop.set(true);
+                }
+                return;
+            }
+            for(int i=0; i<dim[dimIndex]; ++i){
+                v[dimIndex] = i;
+                recur(dimIndex + 1);
+            }
+        }
+    }
+
 
 }

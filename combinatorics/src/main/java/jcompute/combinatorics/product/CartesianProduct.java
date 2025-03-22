@@ -77,7 +77,7 @@ public interface CartesianProduct {
     void reportIndexRanges(MultiIntConsumer intConsumer);
 
     /**
-     * Visits all distinct vectors.
+     * Visits all distinct tuples.
      */
     void forEach(Visiting visiting, MultiIntConsumer intConsumer);
     default void forEachSequential(final MultiIntConsumer intConsumer) {
@@ -88,13 +88,25 @@ public interface CartesianProduct {
     }
 
     /**
+     * Streams all distinct tuples.
+     */
+    Stream<int[]> stream(Visiting visiting);
+    default Stream<int[]> streamSequential() {
+        return stream(Visiting.SEQUENTIAL);
+    }
+    default Stream<int[]> streamParallel() {
+        return stream(Visiting.PARALLEL);
+    }
+
+    /**
      * Creates a collector for each possible integer of the first dimension, then streams them after they passed given prefixedIntConsumer.
      */
     <T> Stream<T> streamCollectors(final IntFunction<T> collectorFactory, final PrefixedMultiIntConsumer<T> prefixedIntConsumer);
 
 
+
     /**
-     * Visits up to all distinct vectors an optionally returns any that matches given predicate.
+     * Visits up to all distinct tuples, optionally returning any that matches given predicate.
      */
     Optional<int[]> findAny(MultiIntPredicate intPredicate);
 
@@ -123,5 +135,7 @@ public interface CartesianProduct {
             default -> new CartesianProductN(dim);
         };
     }
+
+
 
 }

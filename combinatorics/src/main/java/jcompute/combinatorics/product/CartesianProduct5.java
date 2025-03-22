@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.IntFunction;
+import java.util.stream.Gatherer;
 import java.util.stream.Stream;
 
 import jcompute.core.util.function.MultiIntConsumer;
@@ -57,6 +58,13 @@ public record CartesianProduct5(int n0, int n1, int n2, int n3, int n4) implemen
                 }
             }
         });
+    }
+
+    @Override
+    public Stream<int[]> stream(final Visiting visiting) {
+        return visiting.range(n0)
+            .mapToObj(Integer::valueOf)
+            .gather(Gatherer.of(new Integrators.Integrator5(n1, n2, n3, n4)));
     }
 
     @Override

@@ -23,4 +23,7 @@ public interface MultiIntPredicate {
 
     boolean test(int ...v);
 
+    default boolean testNot(final int ...v) {
+        return !test(v);
+    }
 }
