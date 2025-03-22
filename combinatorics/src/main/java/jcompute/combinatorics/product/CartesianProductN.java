@@ -107,8 +107,24 @@ public record CartesianProductN(int ...dim) implements CartesianProduct {
 
     private record RecursiveVisitor(int[] dim, int[] v, MultiIntConsumer intConsumer) {
         void recur(final int dimIndex){
-            if(dimIndex == v.length) {
-                intConsumer.accept(v);
+            if(dimIndex == v.length-4) {
+                final int lRange = dim[dimIndex-3];
+                for(int l=0; l<lRange; ++l){
+                    v[dimIndex-3] = l;
+                    final int kRange = dim[dimIndex-2];
+                    for(int k=0; k<kRange; ++k){
+                        v[dimIndex-2] = k;
+                        final int jRange = dim[dimIndex-1];
+                        for(int j=0; j<jRange; ++j){
+                            v[dimIndex-1] = j;
+                            final int iRange = dim[dimIndex];
+                            for(int i=0; i<iRange; ++i){
+                                v[dimIndex] = i;
+                                intConsumer.accept(v);
+                            }
+                        }
+                    }
+                }
                 return;
             }
             for(int i=0; i<dim[dimIndex]; ++i){
@@ -131,6 +147,7 @@ public record CartesianProductN(int ...dim) implements CartesianProduct {
         }
     }
 
+    // perhaps use stream().filter(...).findAny() instead - needs benchmarks
     private record RecursiveFinder(int[] dim, int[] v, MultiIntPredicate intPredicate, AtomicReference<int[]> result) {
         void recur(final int dimIndex){
             if(dimIndex == v.length) {
@@ -148,18 +165,35 @@ public record CartesianProductN(int ...dim) implements CartesianProduct {
 
     private record RecursiveWhile(int[] dim, int[] v, MultiIntPredicate condition, AtomicBoolean stop) {
         void recur(final int dimIndex){
-            if(dimIndex == v.length) {
-                if(!condition.test(v)) {
-                    stop.set(true);
+            if(dimIndex == v.length-4) {
+                final int lRange = dim[dimIndex-3];
+                for(int l=0; l<lRange; ++l){
+                    v[dimIndex-3] = l;
+                    final int kRange = dim[dimIndex-2];
+                    for(int k=0; k<kRange; ++k){
+                        v[dimIndex-2] = k;
+                        final int jRange = dim[dimIndex-1];
+                        for(int j=0; j<jRange; ++j){
+                            v[dimIndex-1] = j;
+                            final int iRange = dim[dimIndex];
+                            for(int i=0; i<iRange; ++i){
+                                v[dimIndex] = i;
+                                if(!condition.test(v)) {
+                                    stop.set(true);
+                                    return;
+                                }
+                            }
+                        }
+                    }
                 }
                 return;
             }
             for(int i=0; i<dim[dimIndex]; ++i){
                 v[dimIndex] = i;
                 recur(dimIndex + 1);
+                if(stop.get()) return;
             }
         }
     }
-
 
 }
