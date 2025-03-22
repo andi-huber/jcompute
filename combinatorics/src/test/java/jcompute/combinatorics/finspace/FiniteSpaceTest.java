@@ -24,11 +24,14 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import jcompute.combinatorics.product.CartesianProduct4;
+import jcompute.combinatorics.product.CartesianProductN;
+
 class FiniteSpaceTest {
 
     @Test
     void generic() {
-        var fs = new FiniteSpaceN(16, 2, 3, 4);
+        var fs = new CartesianProductN(16, 2, 3, 4);
         assertEquals(16*2*3*4, fs.cardinality().intValueExact());
 
         var adder = new LongAdder();
@@ -42,7 +45,7 @@ class FiniteSpaceTest {
 
     @Test
     void n4() {
-        var fs = new FiniteSpace4(16, 2, 3, 4);
+        var fs = new CartesianProduct4(16, 2, 3, 4);
         assertEquals(16*2*3*4, fs.cardinality().intValueExact());
 
         var adder = new LongAdder();

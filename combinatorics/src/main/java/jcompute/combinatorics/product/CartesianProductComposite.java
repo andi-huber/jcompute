@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.combinatorics.finspace;
+package jcompute.combinatorics.product;
 
 import java.math.BigInteger;
 import java.util.Optional;
@@ -28,26 +28,26 @@ import jcompute.core.util.function.MultiIntPredicate;
 import jcompute.core.util.function.PrefixedMultiIntConsumer;
 
 //experimental
-record FiniteSpaceComposite(FiniteSpace a, FiniteSpace b) implements FiniteSpace {
+record CartesianProductComposite(CartesianProduct a, CartesianProduct b) implements CartesianProduct {
 
-    @Override public int dimensionCount() { return a.dimensionCount() + b.dimensionCount(); }
+    @Override public int indexCount() { return a.indexCount() + b.indexCount(); }
     @Override public BigInteger cardinality() {
         return a.cardinality()
             .multiply(b.cardinality());
     }
 
     @Override
-    public void reportDimensionSizes(final MultiIntConsumer intConsumer) {
-        var v = new int[dimensionCount()];
-        a.reportDimensionSizes(r->System.arraycopy(r, 0, v, 0, r.length));
-        b.reportDimensionSizes(r->System.arraycopy(r, 0, v, a.dimensionCount(), r.length));
+    public void reportIndexRanges(final MultiIntConsumer intConsumer) {
+        var v = new int[indexCount()];
+        a.reportIndexRanges(r->System.arraycopy(r, 0, v, 0, r.length));
+        b.reportIndexRanges(r->System.arraycopy(r, 0, v, a.indexCount(), r.length));
         intConsumer.accept(v);
     }
 
     @Override
     public void forEach(final Visiting visiting, final MultiIntConsumer intConsumer) {
         a.forEach(visiting, va->{
-            var v = new int[dimensionCount()];
+            var v = new int[indexCount()];
             System.arraycopy(va, 0, v, 0, va.length);
             b.forEach(Visiting.SEQUENTIAL, vb->{
                 System.arraycopy(vb, 0, v, va.length, vb.length); // this hurts performance

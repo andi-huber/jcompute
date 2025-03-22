@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.combinatorics.finspace;
+package jcompute.combinatorics.product;
 
 import java.math.BigInteger;
 import java.util.Objects;
@@ -30,9 +30,9 @@ import jcompute.core.util.function.MultiIntConsumer;
 import jcompute.core.util.function.MultiIntPredicate;
 import jcompute.core.util.function.PrefixedMultiIntConsumer;
 
-public record FiniteSpaceN(int ...dim) implements FiniteSpace {
+public record CartesianProductN(int ...dim) implements CartesianProduct {
 
-    @Override public int dimensionCount() { return dim.length; }
+    @Override public int indexCount() { return dim.length; }
     @Override public BigInteger cardinality() {
         return IntStream.of(dim)
             .mapToObj(BigInteger::valueOf)
@@ -40,7 +40,7 @@ public record FiniteSpaceN(int ...dim) implements FiniteSpace {
     }
 
     @Override
-    public void reportDimensionSizes(final MultiIntConsumer intConsumer) {
+    public void reportIndexRanges(final MultiIntConsumer intConsumer) {
         intConsumer.accept(dim);
     }
 

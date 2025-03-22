@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.combinatorics.finspace;
+package jcompute.combinatorics.product;
 
 import java.math.BigInteger;
 import java.util.Objects;
@@ -28,18 +28,19 @@ import jcompute.core.util.function.MultiIntConsumer;
 import jcompute.core.util.function.MultiIntPredicate;
 import jcompute.core.util.function.PrefixedMultiIntConsumer;
 
-public record FiniteSpace3(int n0, int n1, int n2) implements FiniteSpace {
+public record CartesianProduct4(int n0, int n1, int n2, int n3) implements CartesianProduct {
 
-    @Override public int dimensionCount() { return 3; }
+    @Override public int indexCount() { return 4; }
     @Override public BigInteger cardinality() {
         return BigInteger.valueOf(n0)
             .multiply(BigInteger.valueOf(n1))
-            .multiply(BigInteger.valueOf(n2));
+            .multiply(BigInteger.valueOf(n2))
+            .multiply(BigInteger.valueOf(n3));
     }
 
     @Override
-    public void reportDimensionSizes(final MultiIntConsumer intConsumer) {
-        intConsumer.accept(n0, n1, n2);
+    public void reportIndexRanges(final MultiIntConsumer intConsumer) {
+        intConsumer.accept(n0, n1, n2, n3);
     }
 
     @Override
@@ -47,7 +48,9 @@ public record FiniteSpace3(int n0, int n1, int n2) implements FiniteSpace {
         visiting.range(n0).forEach(i->{
             for(int j=0; j<n1; ++j){
                 for(int k=0; k<n2; ++k){
-                    intConsumer.accept(i, j, k);
+                    for(int l=0; l<n3; ++l){
+                        intConsumer.accept(i, j, k, l);
+                    }
                 }
             }
         });
@@ -59,7 +62,9 @@ public record FiniteSpace3(int n0, int n1, int n2) implements FiniteSpace {
             T t = collectorFactory.apply(i);
             for(int j=0; j<n1; ++j){
                 for(int k=0; k<n2; ++k){
-                    prefixedIntConsumer.accept(t, i, j, k);
+                    for(int l=0; l<n3; ++l){
+                        prefixedIntConsumer.accept(t, i, j, k, l);
+                    }
                 }
             }
             return t;
@@ -72,8 +77,10 @@ public record FiniteSpace3(int n0, int n1, int n2) implements FiniteSpace {
             .mapToObj(i->{
                 for(int j=0; j<n1; ++j){
                     for(int k=0; k<n2; ++k){
-                        if(intPredicate.test(i, j, k)) {
-                            return new int[] {i, j, k};
+                        for(int l=0; l<n3; ++l){
+                            if(intPredicate.test(i, j, k, l)) {
+                                return new int[] {i, j, k, l};
+                            }
                         }
                     }
                 }

@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package jcompute.combinatorics.finspace;
+package jcompute.combinatorics.product;
 
 import java.math.BigInteger;
 import java.util.Objects;
@@ -28,19 +28,20 @@ import jcompute.core.util.function.MultiIntConsumer;
 import jcompute.core.util.function.MultiIntPredicate;
 import jcompute.core.util.function.PrefixedMultiIntConsumer;
 
-public record FiniteSpace4(int n0, int n1, int n2, int n3) implements FiniteSpace {
+public record CartesianProduct5(int n0, int n1, int n2, int n3, int n4) implements CartesianProduct {
 
-    @Override public int dimensionCount() { return 4; }
+    @Override public int indexCount() { return 5; }
     @Override public BigInteger cardinality() {
         return BigInteger.valueOf(n0)
             .multiply(BigInteger.valueOf(n1))
             .multiply(BigInteger.valueOf(n2))
-            .multiply(BigInteger.valueOf(n3));
+            .multiply(BigInteger.valueOf(n3))
+            .multiply(BigInteger.valueOf(n4));
     }
 
     @Override
-    public void reportDimensionSizes(final MultiIntConsumer intConsumer) {
-        intConsumer.accept(n0, n1, n2, n3);
+    public void reportIndexRanges(final MultiIntConsumer intConsumer) {
+        intConsumer.accept(n0, n1, n2, n3, n4);
     }
 
     @Override
@@ -49,7 +50,9 @@ public record FiniteSpace4(int n0, int n1, int n2, int n3) implements FiniteSpac
             for(int j=0; j<n1; ++j){
                 for(int k=0; k<n2; ++k){
                     for(int l=0; l<n3; ++l){
-                        intConsumer.accept(i, j, k, l);
+                        for(int m=0; m<n4; ++m){
+                            intConsumer.accept(i, j, k, l, m);
+                        }
                     }
                 }
             }
@@ -63,7 +66,9 @@ public record FiniteSpace4(int n0, int n1, int n2, int n3) implements FiniteSpac
             for(int j=0; j<n1; ++j){
                 for(int k=0; k<n2; ++k){
                     for(int l=0; l<n3; ++l){
-                        prefixedIntConsumer.accept(t, i, j, k, l);
+                        for(int m=0; m<n4; ++m){
+                            prefixedIntConsumer.accept(t, i, j, k, l, m);
+                        }
                     }
                 }
             }
@@ -78,8 +83,10 @@ public record FiniteSpace4(int n0, int n1, int n2, int n3) implements FiniteSpac
                 for(int j=0; j<n1; ++j){
                     for(int k=0; k<n2; ++k){
                         for(int l=0; l<n3; ++l){
-                            if(intPredicate.test(i, j, k, l)) {
-                                return new int[] {i, j, k, l};
+                            for(int m=0; m<n4; ++m){
+                                if(intPredicate.test(i, j, k, l, m)) {
+                                    return new int[] {i, j, k, l, m};
+                                }
                             }
                         }
                     }
